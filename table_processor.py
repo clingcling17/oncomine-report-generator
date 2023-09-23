@@ -140,6 +140,7 @@ def generate_intermediate_report(df: pd.DataFrame):
     cnv.loc[(cnv[Col.CALL] == 'AMP')
             & (cnv[Col.GENE_NAME].isin(cnv_tier_2_3_gene_names)),
             Col.TIER] = Tier.TIER_1_2
+    cnv = sort_by_tier_column(cnv)
     
     fusion_tier_2_3_gene_names = (
             'ALK', 'BRAF', 'MET', 'ESR1', 'EGFR', 'ETV6', 'NTRK3', 'FLI1',
@@ -148,7 +149,7 @@ def generate_intermediate_report(df: pd.DataFrame):
     )
     fusion.loc[fusion[Col.GENE].str.startswith(fusion_tier_2_3_gene_names),
                Col.TIER] = Tier.TIER_1_2
-    cnv = sort_by_tier_column(cnv)
+    fusion = sort_by_total_read_and_tier(fusion)
     
     return {
         'SNV': snv,
@@ -192,7 +193,7 @@ def sort_by_tier_column(df: pd.DataFrame):
 
 def sort_by_total_read_and_tier(df: pd.DataFrame):
     df[Col.TIER] = pd.Categorical(df[Col.TIER], list(Tier), ordered=True)
-    return df.sort_values(by=[Col.TOTAL_READ, Col.TIER])
+    return df.sort_values(by=[Col.TOTAL_READ, Col.TIER], ascending=[False, True])
 
 
 class ReadTests(unittest.TestCase):
