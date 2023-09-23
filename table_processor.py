@@ -4,23 +4,23 @@ import pandas as pd
 import constants
 from constants import Tier
 
-column_orig_names = [
-    'FUNC1.gene', 'INFO.1.GENE_NAME', 'FUNC1.protein', 'FUNC1.coding', 
-    'INFO.A.AF', 'INFO.1.FDP', 'INFO.A.FAO', 'FUNC1.transcript', 
-    'FUNC1.function', 'FUNC1.oncomineGeneClass', 'FUNC1.oncomineVariantClass', 
-    'FUNC1.location', 'rowtype', 'INFO...OID', 'FUNC1.CLNID1', 
-    'FUNC1.CLNREVSTAT1', 'FUNC1.CLNSIG1', 'FUNC1.sift', 'FUNC1.polyphen', 
-    'FUNC1.grantham', 'INFO.1.FAIL_REASON', 'CHROM', 'POS', 'INFO.1.END', 
-    'FORMAT.1.CN', 'call', 'INFO...CI', 'ID', 'INFO...LEN', 'QUAL', 
-    'INFO...CDF_MAPD', 'ALT', 'INFO...READ_COUNT', 'INFO.1.EXON_NUM', 
-    'INFO.1.ANNOTATION', 'FILTER', 'Tier'
-]
-assert(len(constants.columns) == len(column_orig_names))
-
 Col = constants.Col
 
 
 def parse_oncomine_file(file: Path):
+    column_orig_names = [
+        'FUNC1.gene', 'INFO.1.GENE_NAME', 'FUNC1.protein', 'FUNC1.coding', 
+        'INFO.A.AF', 'INFO.1.FDP', 'INFO.A.FAO', 'FUNC1.transcript', 
+        'FUNC1.function', 'FUNC1.oncomineGeneClass', 'FUNC1.oncomineVariantClass', 
+        'FUNC1.location', 'rowtype', 'INFO...OID', 'FUNC1.CLNID1', 
+        'FUNC1.CLNREVSTAT1', 'FUNC1.CLNSIG1', 'FUNC1.sift', 'FUNC1.polyphen', 
+        'FUNC1.grantham', 'INFO.1.FAIL_REASON', 'CHROM', 'POS', 'INFO.1.END', 
+        'FORMAT.1.CN', 'call', 'INFO...CI', 'ID', 'INFO...LEN', 'QUAL', 
+        'INFO...CDF_MAPD', 'ALT', 'INFO...READ_COUNT', 'INFO.1.EXON_NUM', 
+        'INFO.1.ANNOTATION', 'FILTER', 'Tier'
+    ]
+    assert(len(constants.columns) == len(column_orig_names))
+
     df = pd.read_table(file, index_col='vcf.rownum', comment='#',
                        na_values=['.'], low_memory=False)
     df = df.reindex(columns=column_orig_names) #tsv 파일에 존재하지 않는 칼럼이 있을 경우 추가
