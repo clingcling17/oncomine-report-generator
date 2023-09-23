@@ -1,6 +1,6 @@
-import pandas as pd
-import unittest
 from pathlib import Path
+import unittest
+import pandas as pd
 import constants
 from constants import Tier
 
@@ -23,7 +23,7 @@ Col = constants.Col
 def parse_oncomine_file(file: Path):
     df = pd.read_table(file, index_col='vcf.rownum', comment='#',
                        na_values=['.'], low_memory=False)
-    df = df.reindex(columns=column_orig_names)
+    df = df.reindex(columns=column_orig_names) #tsv 파일에 존재하지 않는 칼럼이 있을 경우 추가
     df = df[[c for c in column_orig_names]]
     df.columns = constants.columns
     # df[Col.VAF] = df[Col.VAF].map('{:.1%}'.format)
@@ -44,7 +44,7 @@ def assign_default_tier(df: pd.DataFrame):
                 or 'conflicting' in clinical_significance.lower():
                 tier = Tier.TIER_3_4
         if pd.notna(hotspot):
-            if hotspot == 'Deleterious' or hotspot == 'Hotspot':
+            if hotspot in ['Deleterious', 'Hotspot']:
                 tier = Tier.TIER_1_2
 
         return tier
@@ -125,10 +125,10 @@ def generate_intermediate_report(df: pd.DataFrame):
     fusion = df.query(fusion_condition)[fusion_columns]
     fusion_nocall = df.query(fusion_nocall_condition)[fusion_nocall_columns]
 
-    snv.loc[(snv[Col.GENE_NAME] == 'UGT1A1') 
+    snv.loc[(snv[Col.GENE_NAME] == 'UGT1A1')
             & (snv[Col.AA_CHANGE] == 'p.Gly71Arg'), Col.TIER] = Tier.TIER_3
     snv.loc[snv[Col.TOTAL_DEPTH] < 100, Col.TIER] = Tier.TIER_4
-    snv = sort_by_tier_column(snv)
+    sort_by_tier_column(snv)
 
     cnv_tier_2_3_gene_names = [
             'AKT1', 'ALK', 'BRAF', 'CCND2', 'CCNE1', 'CD274', 'CDK4', 'CDK6', 
@@ -140,7 +140,7 @@ def generate_intermediate_report(df: pd.DataFrame):
     cnv.loc[(cnv[Col.CALL] == 'AMP')
             & (cnv[Col.GENE_NAME].isin(cnv_tier_2_3_gene_names)),
             Col.TIER] = Tier.TIER_1_2
-    cnv = sort_by_tier_column(cnv)
+    sort_by_tier_column(cnv)
     
     fusion_tier_2_3_gene_names = (
             'ALK', 'BRAF', 'MET', 'ESR1', 'EGFR', 'ETV6', 'NTRK3', 'FLI1',
@@ -149,7 +149,7 @@ def generate_intermediate_report(df: pd.DataFrame):
     )
     fusion.loc[fusion[Col.GENE].str.startswith(fusion_tier_2_3_gene_names),
                Col.TIER] = Tier.TIER_1_2
-    fusion = sort_by_total_read_and_tier(fusion)
+    sort_by_total_read_and_tier(fusion)
     
     return {
         'SNV': snv,
@@ -162,7 +162,7 @@ def generate_intermediate_report(df: pd.DataFrame):
 
 
 def write_dataframe_as_sheet(dataframes: dict, file: Path):
-    with pd.ExcelWriter(file, engine='xlsxwriter') as writer:
+    with pd.ExcelWriter(file, engine='xlsxwriter') as writer: # pylint: disable=abstract-class-instantiated
         percent_format = writer.book.add_format({'num_format': '0.0%'})
         for key in dataframes:
             df = dataframes[key]
@@ -188,12 +188,12 @@ def write_dataframe_as_sheet(dataframes: dict, file: Path):
 
 def sort_by_tier_column(df: pd.DataFrame):
     df[Col.TIER] = pd.Categorical(df[Col.TIER], list(Tier), ordered=True)
-    return df.sort_values(by=Col.TIER)
+    df.sort_values(by=Col.TIER, inplace=True)
 
 
 def sort_by_total_read_and_tier(df: pd.DataFrame):
     df[Col.TIER] = pd.Categorical(df[Col.TIER], list(Tier), ordered=True)
-    return df.sort_values(by=[Col.TOTAL_READ, Col.TIER], ascending=[False, True])
+    df.sort_values(by=[Col.TOTAL_READ, Col.TIER], ascending=[False, True], inplace=True)
 
 
 class ReadTests(unittest.TestCase):

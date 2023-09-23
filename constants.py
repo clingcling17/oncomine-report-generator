@@ -72,7 +72,6 @@ class Tier(Enum):
         return self.value
 
     def __lt__(self, other):
-        if self.__class__ is other.__class__:
-            return self.index < other.index
+        return self.index < other.index
 
-assert(Tier.TIER_1_2 < Tier.TIER_3_4)
+assert Tier.TIER_NA < Tier.TIER_3

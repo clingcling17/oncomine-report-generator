@@ -1,7 +1,7 @@
-import fitz
 import re
 import unittest
 from pathlib import Path
+import fitz
 from constants import Metrics
 
 def read_pdf_as_text(file: Path):
@@ -30,12 +30,12 @@ def parse_coverage_metrics(text: str):
 
 def parse_headers(file: Path):
     header_parameters = [
-        Metrics.MSI_SCORE, Metrics.MSI_STATUS, Metrics.PERCENT_LOH, 
+        Metrics.MSI_SCORE, Metrics.MSI_STATUS, Metrics.PERCENT_LOH,
         Metrics.TMB_MUTATIONS_PER_MB, Metrics.TOTAL_MAPPED_FUSION_PANEL_READS,
         Metrics.CELLULARITY, Metrics.MAPD
         ]
     
-    with open(file, 'r') as f:
+    with open(file, 'r', encoding='utf-8') as f:
         lines = f.readlines()
         result = {}
         for line in lines:
