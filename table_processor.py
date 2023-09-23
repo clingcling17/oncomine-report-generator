@@ -183,8 +183,6 @@ def write_dataframe_as_sheet(file, **dataframes):
                         worksheet.set_row(index + 1, None, None, {'hidden': True})
 
 
-
-
 def sort_by_tier_column(df: pd.DataFrame):
     df[Col.TIER] = pd.Categorical(df[Col.TIER], list(Tier), ordered=True)
     df.sort_values(by=Col.TIER, inplace=True)
@@ -210,26 +208,31 @@ def generate_printable_gene_info(snv:pd.DataFrame, cnv: pd.DataFrame, fusion: pd
     amp_sig_genes = amp.loc[amp[Col.TIER] == Tier.TIER_1_2, Col.GENE_NAME].tolist()
     amp.columns = ['Gene', 'Estimated copy number', 'Tier']
 
-    fus = fusion.assign(Chbr = lambda x:
+    fus = fusion.assign(ChBr = lambda x:
                         (x[Col.CHROMOSOME] + ':' + x[Col.POSITION].astype(str)))
-    fus = fus[[Col.TOTAL_READ, Col.GENE, 'Chbr', Col.TIER]]
+    fus = fus[[Col.TOTAL_READ, Col.GENE, 'ChBr', Col.TIER]]
     fus = fus.groupby(Col.TOTAL_READ).agg({
-        Col.GENE: list, 'Chbr': list, Col.TIER: 'min'})
+        Col.GENE: list, 'ChBr': list, Col.TIER: 'min'})
     fus = fus.apply(pd.Series.explode, axis=1)
     fus.reset_index(inplace=True)
-    fus_sig_genes = fus.loc[fus[Col.TIER] == Tier.TIER_1_2, Col.GENE]
-    fus_sig_genes = (pd.Series(fus_sig_genes.values.tolist())
-                     .str.join('-') + ' fusion').tolist()
+    assert len(fus.columns) == 6
+    fus.columns = [Col.TOTAL_READ, 'GeneA', 'GeneB', 'ChBrA', 'ChBrB', Col.TIER]
+    fus = fus[[Col.TOTAL_READ, 'GeneA', 'ChBrA', 'GeneB', 'ChBrB', Col.TIER]]
+    fus.rename(lambda x: x.replace('ChBr', 'Chromosome:Breakpoint'),
+               axis='columns', inplace=True)
+    fus_sig_genes = fus.loc[fus[Col.TIER] == Tier.TIER_1_2].apply(
+        lambda x: x['GeneA'] + '-' + x['GeneB'] + ' fusion', axis=1).tolist()
+    sort_by_tier_column(fus)
 
     sig_genes = list(set().union(mut_sig_genes, amp_sig_genes)) + fus_sig_genes
 
     fill_na_tier(mut, amp, fus)
     
     return {
-        'MUT': mut,
-        'AMP': amp,
-        'FUS': fus,
-        'SIG_GENES': sig_genes
+        'Mutation': mut,
+        'Amplification': amp,
+        'Fusion': fus,
+        'sig_genes': sig_genes
     }
     
 
@@ -246,12 +249,12 @@ class ReadTests(unittest.TestCase):
 class IntermediateReportTests(unittest.TestCase):
     def test_report(self):
         source = Path('resources/M23-test-oncomine.tsv')
-        dest = Path('test/M23-test.xlsx')
+        # dest = Path('test/M23-test.xlsx')
         df = parse_oncomine_file(source)
         assign_default_tier(df)
         reports = generate_intermediate_report(df)
         self.assertIsNotNone(reports)
-        write_dataframe_as_sheet(dest, **reports)
+        # write_dataframe_as_sheet(dest, **reports)
         generate_printable_gene_info(reports['SNV'], reports['CNV'], reports['FUSION'])
 
 
