@@ -48,6 +48,9 @@ def parse_headers(file: Path):
                 result[match.group(1)] = match.group(2)
             if len(result) == len(header_parameters):
                 break
+    
+    header_parameters.remove(Metrics.PERCENT_LOH)
+    assert all(item in result.keys() for item in header_parameters)
 
     return result
 
