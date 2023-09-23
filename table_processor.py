@@ -166,10 +166,22 @@ def write_dataframe_as_sheet(dataframes: dict, file: Path):
         for key in dataframes:
             df = dataframes[key]
             df.to_excel(writer, sheet_name = key, index=False)
+            worksheet = writer.sheets[key]
             if 'VAF' in df.columns:
-                loc = df.columns.get_loc('VAF')
-                worksheet = writer.sheets[key]
+                loc = df.columns.get_loc(Col.VAF)
                 worksheet.set_column(loc, loc, None, percent_format)
+            if key == 'CNV':
+                df.reset_index(drop=True, inplace=True)
+                size = len(df.index)
+                loc = df.columns.get_loc(Col.CALL)
+                worksheet.autofilter(0, loc, size, loc)
+                for index, row in df.iterrows():
+                    call = row[Col.CALL]
+                    if call == 'AMP':
+                        pass
+                    else:
+                        worksheet.set_row(index + 1, None, None, {'hidden': True})
+
 
 
 
