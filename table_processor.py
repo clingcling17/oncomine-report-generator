@@ -161,11 +161,10 @@ def generate_intermediate_report(df: pd.DataFrame):
     }
 
 
-def write_dataframe_as_sheet(dataframes: dict, file: Path):
+def write_dataframe_as_sheet(file, **dataframes):
     with pd.ExcelWriter(file, engine='xlsxwriter') as writer: # pylint: disable=abstract-class-instantiated
         percent_format = writer.book.add_format({'num_format': '0.0%'})
-        for key in dataframes:
-            df = dataframes[key]
+        for key, df in dataframes.items():
             df.to_excel(writer, sheet_name = key, index=False)
             worksheet = writer.sheets[key]
             if 'VAF' in df.columns:
@@ -197,6 +196,10 @@ def sort_by_total_read_and_tier(df: pd.DataFrame):
 
 
 def generate_printable_gene_info(snv:pd.DataFrame, cnv: pd.DataFrame, fusion: pd.DataFrame):
+    def fill_na_tier(*dfs):
+        for df in dfs:
+            df.loc[df[Col.TIER] == Tier.TIER_NA, Col.TIER] = Tier.TIER_3
+
     mut = snv[[Col.GENE_NAME, Col.AA_CHANGE, Col.NUCLEOTIDE_CHANGE, Col.VAF, Col.TIER]]
     mut.loc[:, Col.VAF] = mut[Col.VAF].map('{:.1%}'.format) # pylint: disable=consider-using-f-string
     mut_sig_genes = mut.loc[mut[Col.TIER] == Tier.TIER_1_2, Col.GENE_NAME].tolist()
@@ -207,18 +210,20 @@ def generate_printable_gene_info(snv:pd.DataFrame, cnv: pd.DataFrame, fusion: pd
     amp_sig_genes = amp.loc[amp[Col.TIER] == Tier.TIER_1_2, Col.GENE_NAME].tolist()
     amp.columns = ['Gene', 'Estimated copy number', 'Tier']
 
-    fus = fusion.assign(Chbr = lambda x: 
+    fus = fusion.assign(Chbr = lambda x:
                         (x[Col.CHROMOSOME] + ':' + x[Col.POSITION].astype(str)))
     fus = fus[[Col.TOTAL_READ, Col.GENE, 'Chbr', Col.TIER]]
     fus = fus.groupby(Col.TOTAL_READ).agg({
-        Col.GENE: list, 'Chbr': list, 'Tier': 'min'})
+        Col.GENE: list, 'Chbr': list, Col.TIER: 'min'})
     fus = fus.apply(pd.Series.explode, axis=1)
     fus.reset_index(inplace=True)
     fus_sig_genes = fus.loc[fus[Col.TIER] == Tier.TIER_1_2, Col.GENE]
     fus_sig_genes = (pd.Series(fus_sig_genes.values.tolist())
                      .str.join('-') + ' fusion').tolist()
-    
+
     sig_genes = list(set().union(mut_sig_genes, amp_sig_genes)) + fus_sig_genes
+
+    fill_na_tier(mut, amp, fus)
     
     return {
         'MUT': mut,
@@ -241,12 +246,12 @@ class ReadTests(unittest.TestCase):
 class IntermediateReportTests(unittest.TestCase):
     def test_report(self):
         source = Path('resources/M23-test-oncomine.tsv')
-        # dest = Path('test/M23-test.xlsx')
+        dest = Path('test/M23-test.xlsx')
         df = parse_oncomine_file(source)
         assign_default_tier(df)
         reports = generate_intermediate_report(df)
         self.assertIsNotNone(reports)
-        # write_dataframe_as_sheet(reports, dest)
+        write_dataframe_as_sheet(dest, **reports)
         generate_printable_gene_info(reports['SNV'], reports['CNV'], reports['FUSION'])
 
 
