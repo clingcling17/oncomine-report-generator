@@ -56,8 +56,8 @@ def generate_intermediate_report(df: pd.DataFrame):
     
     snv_columns = [
         Col.GENE_NAME, Col.AA_CHANGE, Col.NUCLEOTIDE_CHANGE, Col.VAF, Col.TIER,
-        Col.ROWTYPE, Col.COSM_ID, Col.TOTAL_DEPTH, Col.VARIANT_COUNT, 
-        Col.REFSNP_ID, Col.CLINICAL_SIGNIFICANCE, Col.MUTATION_TYPE, 
+        Col.ROWTYPE, Col.COSM_ID, Col.TOTAL_DEPTH, Col.VARIANT_COUNT,
+        Col.REFSNP_ID, Col.CLINICAL_SIGNIFICANCE, Col.MUTATION_TYPE,
         Col.GRANTHAM_SCORE, Col.LOCATION, Col.ONCOMINE_GENE_CLASS, Col.HOTSPOT,
         Col.POLYPHEN_SCORE, Col.SIFT_SCORE, Col.REFSEQ, Col.FAIL_REASON
     ]
@@ -65,20 +65,20 @@ def generate_intermediate_report(df: pd.DataFrame):
     snv_nocall_columns = [
         Col.GENE_NAME, Col.AA_CHANGE, Col.REFSEQ, Col.NUCLEOTIDE_CHANGE,
         Col.VAF, Col.MUTATION_TYPE, Col.TOTAL_DEPTH, Col.VARIANT_COUNT,
-        Col.ONCOMINE_GENE_CLASS, Col.HOTSPOT, Col.LOCATION, Col.ROWTYPE, 
+        Col.ONCOMINE_GENE_CLASS, Col.HOTSPOT, Col.LOCATION, Col.ROWTYPE,
         Col.COSM_ID, Col.REFSNP_ID, Col.REFSNP_STAT, Col.CLINICAL_SIGNIFICANCE,
         Col.FAIL_REASON
     ]
 
     cnv_columns = [
-        Col.GENE_NAME, Col.COPY_NUMBER, Col.TIER, Col.ROWTYPE, Col.CALL, 
-        Col.CHROMOSOME, Col.POSITION, Col.ID, Col.QUALITY, Col.FILTER, Col.MAPD, 
+        Col.GENE_NAME, Col.COPY_NUMBER, Col.TIER, Col.ROWTYPE, Col.CALL,
+        Col.CHROMOSOME, Col.POSITION, Col.ID, Col.QUALITY, Col.FILTER, Col.MAPD,
         Col.CI, Col.LENGTH, Col.END_POSITION, Col.ONCOMINE_GENE_CLASS,
         Col.HOTSPOT, Col.FAIL_REASON
     ]
 
     cnv_nocall_columns = [
-        Col.GENE_NAME, Col.COPY_NUMBER, Col.CALL, Col.CI, Col.FILTER, 
+        Col.GENE_NAME, Col.COPY_NUMBER, Col.CALL, Col.CI, Col.FILTER,
         Col.ROWTYPE, Col.ID, Col.CHROMOSOME, Col.POSITION, Col.LENGTH,
         Col.END_POSITION, Col.ONCOMINE_GENE_CLASS, Col.HOTSPOT, Col.QUALITY,
         Col.MAPD, Col.FAIL_REASON
@@ -91,8 +91,8 @@ def generate_intermediate_report(df: pd.DataFrame):
     ]
 
     fusion_nocall_columns = [
-        Col.FILTER, Col.CALL, Col.ROWTYPE, Col.ID, Col.CHROMOSOME, Col.GENE, 
-        Col.ALTERATION, Col.POSITION, Col.TOTAL_READ, Col.ANNOTATION, 
+        Col.FILTER, Col.CALL, Col.ROWTYPE, Col.ID, Col.CHROMOSOME, Col.GENE,
+        Col.ALTERATION, Col.POSITION, Col.TOTAL_READ, Col.ANNOTATION,
         Col.EXON_NUMBER, Col.ONCOMINE_GENE_CLASS, Col.FAIL_REASON
     ]
 
@@ -196,6 +196,38 @@ def sort_by_total_read_and_tier(df: pd.DataFrame):
     df.sort_values(by=[Col.TOTAL_READ, Col.TIER], ascending=[False, True], inplace=True)
 
 
+def generate_printable_gene_info(snv:pd.DataFrame, cnv: pd.DataFrame, fusion: pd.DataFrame):
+    mut = snv[[Col.GENE_NAME, Col.AA_CHANGE, Col.NUCLEOTIDE_CHANGE, Col.VAF, Col.TIER]]
+    mut.loc[:, Col.VAF] = mut[Col.VAF].map('{:.1%}'.format) # pylint: disable=consider-using-f-string
+    mut_sig_genes = mut.loc[mut[Col.TIER] == Tier.TIER_1_2, Col.GENE_NAME].tolist()
+    mut.columns = ['Gene', 'Amino acid change', 'Nucleotide change',
+                   'Variant allele frequency(%)', 'Tier']
+    
+    amp = cnv[[Col.GENE_NAME, Col.COPY_NUMBER, Col.TIER]]
+    amp_sig_genes = amp.loc[amp[Col.TIER] == Tier.TIER_1_2, Col.GENE_NAME].tolist()
+    amp.columns = ['Gene', 'Estimated copy number', 'Tier']
+
+    fus = fusion.assign(Chbr = lambda x: 
+                        (x[Col.CHROMOSOME] + ':' + x[Col.POSITION].astype(str)))
+    fus = fus[[Col.TOTAL_READ, Col.GENE, 'Chbr', Col.TIER]]
+    fus = fus.groupby(Col.TOTAL_READ).agg({
+        Col.GENE: list, 'Chbr': list, 'Tier': 'min'})
+    fus = fus.apply(pd.Series.explode, axis=1)
+    fus.reset_index(inplace=True)
+    fus_sig_genes = fus.loc[fus[Col.TIER] == Tier.TIER_1_2, Col.GENE]
+    fus_sig_genes = (pd.Series(fus_sig_genes.values.tolist())
+                     .str.join('-') + ' fusion').tolist()
+    
+    sig_genes = list(set().union(mut_sig_genes, amp_sig_genes)) + fus_sig_genes
+    
+    return {
+        'MUT': mut,
+        'AMP': amp,
+        'FUS': fus,
+        'SIG_GENES': sig_genes
+    }
+    
+
 class ReadTests(unittest.TestCase):
     def test_read(self):
         file = Path('resources/M23-test-oncomine.tsv')
@@ -209,12 +241,13 @@ class ReadTests(unittest.TestCase):
 class IntermediateReportTests(unittest.TestCase):
     def test_report(self):
         source = Path('resources/M23-test-oncomine.tsv')
-        dest = Path('test/M23-test.xlsx')
+        # dest = Path('test/M23-test.xlsx')
         df = parse_oncomine_file(source)
         assign_default_tier(df)
         reports = generate_intermediate_report(df)
         self.assertIsNotNone(reports)
-        write_dataframe_as_sheet(reports, dest)
+        # write_dataframe_as_sheet(reports, dest)
+        generate_printable_gene_info(reports['SNV'], reports['CNV'], reports['FUSION'])
 
 
 if __name__ == '__main__':
