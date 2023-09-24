@@ -59,7 +59,7 @@ def generate_printable_gene_info(snv: Variant, cnv: Variant, fusion: Variant):
     amp_sig_genes = filter_significant_tier(amp_info)['Gene'].tolist()
     fus_sig_genes = filter_significant_tier(fus_info).apply(
             lambda x: x['GeneA'] + '-' + x['GeneB'] + ' fusion', axis=1).tolist()
-    sig_genes = list(set().union(mut_sig_genes, amp_sig_genes)) + fus_sig_genes
+    sig_genes = list(set().union(mut_sig_genes, amp_sig_genes)) + list(set(fus_sig_genes)) #중복 제거
 
     return mut_info, amp_info, fus_info, sig_genes
 
