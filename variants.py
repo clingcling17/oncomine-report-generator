@@ -81,9 +81,7 @@ class Variant(ABC):
     @staticmethod
     def fill_na_tier(*dfs):
         for df in dfs:
-            df2 = df.loc[df[Col.TIER] == Tier.TIER_NA, Col.TIER] = Tier.TIER_3
-            # TIER_NA가 NaN 처리되는 것으로 보임
-            # df.loc[df[Col.TIER].isna(), Col.TIER] = Tier.TIER_3
+            df.loc[df[Col.TIER] == Tier.TIER_NA, Col.TIER] = Tier.TIER_3
     
 
 
@@ -161,7 +159,7 @@ class CNV(Variant):
 
 
     def _assign_tier(self):
-        tier_2_3_gene_names = [
+        tier_1_2_gene_names = [
             'AKT1', 'ALK', 'BRAF', 'CCND2', 'CCNE1', 'CD274', 'CDK4', 'CDK6', 
             'DDR1', 'DDR2', 'EGFR', 'EMSY', 'ERBB2', 'FGF23', 'FGF3', 'FGF4', 
             'FGF19', 'CCND1', 'FGF9', 'FGFR1', 'FGFR2', 'FGFR4', 'GNAS', 'KRAS',
@@ -170,7 +168,7 @@ class CNV(Variant):
         ]
         super()._assign_tier()
         self.call.loc[(self.call[Col.CALL] == 'AMP')
-                & (self.call[Col.GENE_NAME].isin(tier_2_3_gene_names)),
+                & (self.call[Col.GENE_NAME].isin(tier_1_2_gene_names)),
                 Col.TIER] = Tier.TIER_1_2
 
 
@@ -218,13 +216,13 @@ class Fusion(Variant):
 
 
     def _assign_tier(self):
-        tier_2_3_gene_names = (
+        tier_1_2_gene_names = (
             'ALK', 'BRAF', 'MET', 'ESR1', 'EGFR', 'ETV6', 'NTRK3', 'FLI1',
             'FGFR', 'FGFR3', 'NTRK2', 'NRG1', 'NTRK3', 'PAX8', 'RAF1', 'RELA',
             'RET', 'PIK3CA'
             )
         super()._assign_tier()
-        self.call.loc[self.call[Col.GENE].str.startswith(tier_2_3_gene_names),
+        self.call.loc[self.call[Col.GENE].str.startswith(tier_1_2_gene_names),
                       Col.TIER] = Tier.TIER_1_2
         
     
