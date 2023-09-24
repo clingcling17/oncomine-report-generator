@@ -51,17 +51,20 @@ def filter_significant_tier(df: pd.DataFrame):
   
 
 def generate_printable_gene_info(snv: Variant, cnv: Variant, fusion: Variant):
-    mut_info = snv.generate_report_info()
-    amp_info = cnv.generate_report_info()
-    fus_info = fusion.generate_report_info()
+    mut = snv.generate_report_info()
+    amp = cnv.generate_report_info()
+    fus = fusion.generate_report_info()
+    Variant.fill_na_tier(mut, constants.Tier.TIER_3)
+    Variant.fill_na_tier(amp, constants.Tier.TIER_3)
+    Variant.fill_na_tier(fus, constants.Tier.TIER_3)
 
-    mut_sig_genes = filter_significant_tier(mut_info)['Gene'].tolist()
-    amp_sig_genes = filter_significant_tier(amp_info)['Gene'].tolist()
-    fus_sig_genes = filter_significant_tier(fus_info).apply(
+    mut_sig_genes = filter_significant_tier(mut)['Gene'].tolist()
+    amp_sig_genes = filter_significant_tier(amp)['Gene'].tolist()
+    fus_sig_genes = filter_significant_tier(fus).apply(
             lambda x: x['GeneA'] + '-' + x['GeneB'] + ' fusion', axis=1).tolist()
     sig_genes = list(set().union(mut_sig_genes, amp_sig_genes)) + list(set(fus_sig_genes)) #중복 제거
 
-    return mut_info, amp_info, fus_info, sig_genes
+    return mut, amp, fus, sig_genes
 
 # class ReadTests(unittest.TestCase):
 #     def test_read(self):

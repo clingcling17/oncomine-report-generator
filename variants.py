@@ -11,17 +11,17 @@ class Variant(ABC):
     
     @property
     @abstractmethod
-    def call_condition(self):
+    def call_condition(self) -> str:
         pass
 
     @property
     @abstractmethod
-    def nocall_condition(self):
+    def nocall_condition(self) -> str:
         pass
 
     @property
     @abstractmethod
-    def columns(self):
+    def columns(self) -> list[str]:
         pass
 
 
@@ -74,9 +74,8 @@ class Variant(ABC):
     
 
     @staticmethod
-    def _fill_na_tier(*dfs):
-        for df in dfs:
-            df.loc[df[Col.TIER] == Tier.TIER_NA, Col.TIER] = Tier.TIER_3
+    def fill_na_tier(df, tier):
+        df.loc[df[Col.TIER] == Tier.TIER_NA, Col.TIER] = tier
     
 
 
@@ -127,7 +126,6 @@ class SNV(Variant):
         mut.loc[:, Col.VAF] = mut[Col.VAF].map('{:.1%}'.format) # pylint: disable=consider-using-f-string
         mut.columns = ['Gene', 'Amino acid change', 'Nucleotide change',
                     'Variant allele frequency(%)', 'Tier']
-        Variant._fill_na_tier(mut)
         return mut
  
 
@@ -184,7 +182,6 @@ class CNV(Variant):
     def generate_report_info(self):
         amp = self.call[[Col.GENE_NAME, Col.COPY_NUMBER, Col.TIER]]
         amp.columns = ['Gene', 'Estimated copy number', 'Tier']
-        Variant._fill_na_tier(amp)
         return amp
     
 
@@ -239,10 +236,7 @@ class Fusion(Variant):
         fus.columns = ['Total Read', 'GeneA', 'GeneB', 'ChBrA', 'ChBrB', 'Tier']
         fus = fus[['GeneA', 'ChBrA', 'GeneB', 'ChBrB', 'Total Read', 'Tier']]
         fus.rename(lambda x: x.replace('ChBr', 'Chromosome:Breakpoint'),
-                axis='columns', inplace=True)
-        
+                axis='columns', inplace=True) 
         Variant.sort_by_tier(fus)
-        Variant._fill_na_tier(fus)
-
         return fus
     
