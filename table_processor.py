@@ -162,6 +162,18 @@ def generate_intermediate_report(df: pd.DataFrame):
 
 
 def write_dataframe_as_sheet(file, **dataframes):
+    def filter_amp(worksheet, df):
+        df.reset_index(drop=True, inplace=True)
+        size = len(df.index)
+        loc = df.columns.get_loc(Col.CALL)
+        worksheet.autofilter(0, loc, size, loc)
+        for index, row in df.iterrows():
+            call = row[Col.CALL]
+            if call == 'AMP':
+                pass
+            else:
+                worksheet.set_row(index + 1, None, None, {'hidden': True})
+
     with pd.ExcelWriter(file, engine='xlsxwriter') as writer: # pylint: disable=abstract-class-instantiated
         percent_format = writer.book.add_format({'num_format': '0.0%'})
         for key, df in dataframes.items():
@@ -171,16 +183,7 @@ def write_dataframe_as_sheet(file, **dataframes):
                 loc = df.columns.get_loc(Col.VAF)
                 worksheet.set_column(loc, loc, None, percent_format)
             if key == 'CNV':
-                df.reset_index(drop=True, inplace=True)
-                size = len(df.index)
-                loc = df.columns.get_loc(Col.CALL)
-                worksheet.autofilter(0, loc, size, loc)
-                for index, row in df.iterrows():
-                    call = row[Col.CALL]
-                    if call == 'AMP':
-                        pass
-                    else:
-                        worksheet.set_row(index + 1, None, None, {'hidden': True})
+                filter_amp(worksheet, df)
 
 
 def sort_by_tier_column(df: pd.DataFrame):
@@ -193,38 +196,46 @@ def sort_by_total_read_and_tier(df: pd.DataFrame):
     df.sort_values(by=[Col.TOTAL_READ, Col.TIER], ascending=[False, True], inplace=True)
 
 
-def generate_printable_gene_info(snv:pd.DataFrame, cnv: pd.DataFrame, fusion: pd.DataFrame):
-    def fill_na_tier(*dfs):
-        for df in dfs:
-            df.loc[df[Col.TIER] == Tier.TIER_NA, Col.TIER] = Tier.TIER_3
+def filter_significant_tier(df: pd.DataFrame):
+    return df.loc[df[Col.TIER] == Tier.TIER_1_2]
 
+
+def generate_printable_gene_info(snv:pd.DataFrame, cnv: pd.DataFrame, fusion: pd.DataFrame):
     mut = snv[[Col.GENE_NAME, Col.AA_CHANGE, Col.NUCLEOTIDE_CHANGE, Col.VAF, Col.TIER]]
+    mut_sig_genes = filter_significant_tier(mut)[Col.GENE_NAME].tolist()
     mut.loc[:, Col.VAF] = mut[Col.VAF].map('{:.1%}'.format) # pylint: disable=consider-using-f-string
-    mut_sig_genes = mut.loc[mut[Col.TIER] == Tier.TIER_1_2, Col.GENE_NAME].tolist()
     mut.columns = ['Gene', 'Amino acid change', 'Nucleotide change',
                    'Variant allele frequency(%)', 'Tier']
     
     amp = cnv[[Col.GENE_NAME, Col.COPY_NUMBER, Col.TIER]]
-    amp_sig_genes = amp.loc[amp[Col.TIER] == Tier.TIER_1_2, Col.GENE_NAME].tolist()
+    amp_sig_genes = filter_significant_tier(amp)[Col.GENE_NAME].tolist()
     amp.columns = ['Gene', 'Estimated copy number', 'Tier']
 
     fus = fusion.assign(ChBr = lambda x:
                         (x[Col.CHROMOSOME] + ':' + x[Col.POSITION].astype(str)))
     fus = fus[[Col.TOTAL_READ, Col.GENE, 'ChBr', Col.TIER]]
+
     fus = fus.groupby(Col.TOTAL_READ).agg({
         Col.GENE: list, 'ChBr': list, Col.TIER: 'min'})
     fus = fus.apply(pd.Series.explode, axis=1)
     fus.reset_index(inplace=True)
     assert len(fus.columns) == 6
+
     fus.columns = [Col.TOTAL_READ, 'GeneA', 'GeneB', 'ChBrA', 'ChBrB', Col.TIER]
     fus = fus[[Col.TOTAL_READ, 'GeneA', 'ChBrA', 'GeneB', 'ChBrB', Col.TIER]]
     fus.rename(lambda x: x.replace('ChBr', 'Chromosome:Breakpoint'),
                axis='columns', inplace=True)
-    fus_sig_genes = fus.loc[fus[Col.TIER] == Tier.TIER_1_2].apply(
+    
+    fus_sig_genes = filter_significant_tier(fus).apply(
         lambda x: x['GeneA'] + '-' + x['GeneB'] + ' fusion', axis=1).tolist()
+    
     sort_by_tier_column(fus)
 
     sig_genes = list(set().union(mut_sig_genes, amp_sig_genes)) + fus_sig_genes
+
+    def fill_na_tier(*dfs):
+        for df in dfs:
+            df.loc[df[Col.TIER] == Tier.TIER_NA, Col.TIER] = Tier.TIER_3
 
     fill_na_tier(mut, amp, fus)
     
