@@ -5,9 +5,9 @@ from constants import Col, Tier
 
 class Variant(ABC):
     def __init__(self, df: pd.DataFrame):
-        self.generate_data(df)
-        self.assign_tier()
-        self.sort()
+        self._generate_data(df)
+        self._assign_tier()
+        self._sort()
     
     @property
     @abstractmethod
@@ -25,13 +25,13 @@ class Variant(ABC):
         pass
 
 
-    def generate_data(self, df):
+    def _generate_data(self, df):
         self.call = df.query(self.call_condition)[self.columns]
         nocall_columns = [x for x in self.columns if x != Col.TIER]
         self.nocall = df.query(self.nocall_condition)[nocall_columns]
 
 
-    def assign_tier(self):
+    def _assign_tier(self):
         def populate_tier_default(row):
             clinical_significance = row[Col.CLINICAL_SIGNIFICANCE]
             hotspot = row[Col.HOTSPOT]
@@ -53,7 +53,7 @@ class Variant(ABC):
         self.call[Col.TIER] = self.call.apply(populate_tier_default, axis=1)
 
     
-    def sort(self):
+    def _sort(self):
         Variant.sort_by_tier_column(self.call)
         
 
@@ -110,8 +110,8 @@ class SNV(Variant):
         super().__init__(df)
     
 
-    def assign_tier(self):
-        super().assign_tier()
+    def _assign_tier(self):
+        super()._assign_tier()
         self.call.loc[(self.call[Col.GENE_NAME] == 'UGT1A1')
             & (self.call[Col.AA_CHANGE] == 'p.Gly71Arg'), Col.TIER] = Tier.TIER_3
         self.call.loc[self.call[Col.TOTAL_DEPTH] < 100, Col.TIER] = Tier.TIER_4
@@ -160,7 +160,7 @@ class CNV(Variant):
         super().__init__(df)
 
 
-    def assign_tier(self):
+    def _assign_tier(self):
         tier_2_3_gene_names = [
             'AKT1', 'ALK', 'BRAF', 'CCND2', 'CCNE1', 'CD274', 'CDK4', 'CDK6', 
             'DDR1', 'DDR2', 'EGFR', 'EMSY', 'ERBB2', 'FGF23', 'FGF3', 'FGF4', 
@@ -168,7 +168,7 @@ class CNV(Variant):
             'MAP2K1', 'MCL1', 'MDM2', 'MET', 'MYC', 'NTRK1', 'PIK3CA', 'PTPN11',
             'RAF1', 'RICTOR', 'ROS1', 'SRC'
         ]
-        super().assign_tier()
+        super()._assign_tier()
         self.call.loc[(self.call[Col.CALL] == 'AMP')
                 & (self.call[Col.GENE_NAME].isin(tier_2_3_gene_names)),
                 Col.TIER] = Tier.TIER_1_2
@@ -217,18 +217,18 @@ class Fusion(Variant):
         super().__init__(df)
 
 
-    def assign_tier(self):
+    def _assign_tier(self):
         tier_2_3_gene_names = (
             'ALK', 'BRAF', 'MET', 'ESR1', 'EGFR', 'ETV6', 'NTRK3', 'FLI1',
             'FGFR', 'FGFR3', 'NTRK2', 'NRG1', 'NTRK3', 'PAX8', 'RAF1', 'RELA',
             'RET', 'PIK3CA'
             )
-        super().assign_tier()
+        super()._assign_tier()
         self.call.loc[self.call[Col.GENE].str.startswith(tier_2_3_gene_names),
                       Col.TIER] = Tier.TIER_1_2
         
     
-    def sort(self):
+    def _sort(self):
         self.call[Col.TIER] = pd.Categorical(self.call[Col.TIER], list(Tier), ordered=True)
         self.call.sort_values(by=[Col.TOTAL_READ, Col.TIER], ascending=[False, True], inplace=True)
     
@@ -256,3 +256,4 @@ class Fusion(Variant):
         Variant.sort_by_tier_column(fus)
         Variant.fill_na_tier(fus)
         return fus, fus_sig_genes
+    
