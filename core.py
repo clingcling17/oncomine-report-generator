@@ -1,0 +1,165 @@
+import os
+import sys
+from pathlib import Path
+import pprint
+import pandas as pd
+from tabulate import tabulate
+import numpy as np
+
+import file_processor
+import value_reader
+import table_processor
+from constants import Metrics
+
+
+MAPD_POOR_NOTE = 'Note) Sample의 질이 좋지 않아 (MAPD > 0.5) LOH score를 계산할'\
+    ' 수 없습니다.'
+UNIFORMITY_POOR_NOTE = 'Note) Sequencing의 질이 좋지 않아 신뢰도가 낮으므로'\
+    ' (uniformity < 90%) 임상 적용시 주의가 필요합니다.'
+
+
+def run(source_file, dest_dir, case_name):
+    file_processor.unzip_to_destination_and_normalize(source_file, dest_dir)
+    files_to_read = file_processor.find_target_files(dest_dir)
+    files_to_read_paths = {k: str(v) for k, v in files_to_read.items()}
+    print(f'files to read: \n{pprint.pformat(files_to_read_paths)}')
+
+    oncomine_file = files_to_read['ONCOMINE_FILE']
+    vcf_file = files_to_read['VCF_FILE']
+    qc_file = files_to_read['QC_FILE']
+    assert oncomine_file is not None and vcf_file is not None and qc_file is not None
+
+    qc_pdf_text = value_reader.read_pdf_as_text(qc_file)
+    coverage_metrics = value_reader.parse_coverage_metrics(qc_pdf_text)
+    assert coverage_metrics is not None
+
+    headers = value_reader.parse_headers(vcf_file)
+
+    oncomine_df = table_processor.parse_oncomine_file(oncomine_file)
+    intermediate_tables = table_processor.generate_intermediate_tables(oncomine_df)
+    worksheet = dest_dir / (case_name + '.xlsx')
+    table_processor.write_dataframe_as_sheet(worksheet, **intermediate_tables)
+    print(f'Printed intermediate table to worksheet: {worksheet}')
+    
+    snv = intermediate_tables['SNV']
+    cnv = intermediate_tables['CNV']
+    fusion = intermediate_tables['FUSION']
+    gene_infos = table_processor.generate_printable_gene_info(snv, cnv, fusion)
+
+    # 검사결과
+    cellularity = headers[Metrics.CELLULARITY] + '%'
+    tumor_mutational_burden = headers[Metrics.TMB_MUTATIONS_PER_MB]
+    msi_score = '{:.2f}'.format(float(headers[Metrics.MSI_SCORE]))
+    msi_status = headers[Metrics.MSI_STATUS]
+    loh = headers[Metrics.PERCENT_LOH]
+    loh_unavailable = loh is None
+    loh = 'not available' if loh_unavailable else loh + '%'
+    mapd = float(headers[Metrics.MAPD])
+    sig_note = MAPD_POOR_NOTE if loh_unavailable and mapd > 0.5 else ''
+
+    # 검사정보
+    mean_depth = int(coverage_metrics[Metrics.MEAN_DEPTH])
+    on_target = float(coverage_metrics[Metrics.ON_TARGET].strip('%'))
+    mapped_reads = int(coverage_metrics[Metrics.MAPPED_READS])
+    uniformity = float(coverage_metrics[Metrics.UNIFORMITY].strip('%'))
+
+    score_factors = [
+        mapped_reads >= 5000000,
+        on_target >= 90,
+        mean_depth <= 1200,
+        uniformity >= 90
+        ]
+    score_no = sum(score_factors)
+    assert 0 <= score_no <= 4
+
+    if score_no >= 4:
+        total_quality_score = 'Very Good'
+    elif score_no == 3:
+        total_quality_score = 'Good'
+    elif score_no == 2:
+        total_quality_score = 'Intermediate'
+    else:
+        total_quality_score = 'Poor'
+
+    overall_qc_test_result = 'Fail' if score_no <= 2 else 'Pass'
+
+    qc_note = UNIFORMITY_POOR_NOTE \
+        if overall_qc_test_result == 'Pass' and uniformity < 90 else ''
+    
+    on_target = str(on_target) + '%'
+    
+
+    mut = gene_infos['Mutation']
+    amp = gene_infos['Amplification']
+    fus = gene_infos['Fusion']
+    sig_genes = ', '.join(gene_infos['sig_genes'])
+    # mut_sig, amp_sig, fus_sig, mut_unk, amp_unk, fus_unk
+
+    mut_sig = table_processor.filter_significant_tier(mut)
+    amp_sig = table_processor.filter_significant_tier(amp)
+    fus_sig = table_processor.filter_significant_tier(fus)
+    mut_unk = _diff_table(mut, mut_sig)
+    amp_unk = _diff_table(amp, amp_sig)
+    fus_unk = _diff_table(fus, fus_sig)
+
+    mut_sig = _print_table(mut_sig)
+    amp_sig = _print_table(amp_sig)
+    fus_sig = _print_table(fus_sig)
+    mut_unk = _print_table(mut_unk)
+    amp_unk = _print_table(amp_unk)
+    fus_unk = _print_table(fus_unk)
+
+    print_params = [
+        cellularity, mut_sig, amp_sig, fus_sig, mut_unk, amp_unk, fus_unk,
+        tumor_mutational_burden, msi_score, msi_status, loh, sig_note,
+        sig_genes, mean_depth, on_target, total_quality_score,
+        overall_qc_test_result, qc_note
+    ]
+    assert len(print_params) == 18
+
+    format_file = Path('resources/report_text_format.txt')
+    with open(format_file, 'rt', encoding='utf-8') as f:
+        text_form = f.read()
+    
+    full_text = text_form.format(cellularity, mut_sig, amp_sig, fus_sig, mut_unk, amp_unk, fus_unk,
+        tumor_mutational_burden, msi_score, msi_status, loh, sig_note,
+        sig_genes, mean_depth, on_target, total_quality_score,
+        overall_qc_test_result, qc_note)
+    # wrapped_text = textwrap.fill(full_text, width=80, expand_tabs=False, 
+    #                              replace_whitespace=False, drop_whitespace=False)
+
+    report_file = dest_dir / f'{case_name}_report.txt'
+    with open(report_file, 'wt', encoding='utf-8') as f:
+        f.write(full_text)
+        # f.write(wrapped_text)
+    print(f'Generated report text file: {report_file}')
+
+
+def _diff_table(op1: pd.DataFrame, op2: pd.DataFrame):
+    index = op1.index.name
+    return op1[~op1.index.isin(op2.index)]
+
+
+def _print_table(df: pd.DataFrame):
+    return tabulate(df.replace(np.nan, None), headers=df.columns.tolist(),
+                    showindex=False) + ('\nNot Found' if df.empty else '')
+
+
+def main():
+    print("Starting oncomine report generator.")
+
+    if len(sys.argv) != 2:
+        sys.exit('Please check arguments number.\n'\
+                 + 'Usage: run.exe Mxx-xxxx.zip')
+    source_file = Path(sys.argv[1])
+    # dest_path = sys.argv[2]
+    print(f'File path: {source_file}')
+    case_name = source_file.stem.split('_')[0]
+    dest_dir = Path(os.getcwd(), case_name)
+    print(f'Destination path: {dest_dir}')
+    print(f'Case name: {case_name}')
+    run(source_file, dest_dir, case_name)
+    
+
+if __name__ == "__main__":
+    main()

@@ -26,6 +26,7 @@ def parse_oncomine_file(file: Path):
     df = df.reindex(columns=column_orig_names) #tsv 파일에 존재하지 않는 칼럼이 있을 경우 추가
     df = df[[c for c in column_orig_names]]
     df.columns = constants.columns
+    df[Col.TIER] = df[Col.TIER].apply(str)
     # df[Col.VAF] = df[Col.VAF].map('{:.1%}'.format)
     return df
 
@@ -52,7 +53,7 @@ def assign_default_tier(df: pd.DataFrame):
     df[Col.TIER] = df.apply(populate_tier_default, axis=1)
 
 
-def generate_intermediate_report(df: pd.DataFrame):
+def generate_intermediate_tables(df: pd.DataFrame):
     
     snv_columns = [
         Col.GENE_NAME, Col.AA_CHANGE, Col.NUCLEOTIDE_CHANGE, Col.VAF, Col.TIER,
@@ -217,12 +218,13 @@ def generate_printable_gene_info(snv:pd.DataFrame, cnv: pd.DataFrame, fusion: pd
 
     fus = fus.groupby(Col.TOTAL_READ).agg({
         Col.GENE: list, 'ChBr': list, Col.TIER: 'min'})
+    fus.sort_values(by=Col.TOTAL_READ, ascending=False, inplace=True)
     fus = fus.apply(pd.Series.explode, axis=1)
     fus.reset_index(inplace=True)
     assert len(fus.columns) == 6
 
     fus.columns = [Col.TOTAL_READ, 'GeneA', 'GeneB', 'ChBrA', 'ChBrB', Col.TIER]
-    fus = fus[[Col.TOTAL_READ, 'GeneA', 'ChBrA', 'GeneB', 'ChBrB', Col.TIER]]
+    fus = fus[['GeneA', 'ChBrA', 'GeneB', 'ChBrB', Col.TOTAL_READ, Col.TIER]]
     fus.rename(lambda x: x.replace('ChBr', 'Chromosome:Breakpoint'),
                axis='columns', inplace=True)
     
@@ -234,8 +236,10 @@ def generate_printable_gene_info(snv:pd.DataFrame, cnv: pd.DataFrame, fusion: pd
     sig_genes = list(set().union(mut_sig_genes, amp_sig_genes)) + fus_sig_genes
 
     def fill_na_tier(*dfs):
-        for df in dfs:
-            df.loc[df[Col.TIER] == Tier.TIER_NA, Col.TIER] = Tier.TIER_3
+        for df in dfs: 
+            # TIER_NA가 NaN 처리되는 것으로 보임
+            # df2 = df.loc[df[Col.TIER] == Tier.TIER_NA, Col.TIER] = Tier.TIER_3
+            df.loc[df[Col.TIER].isna(), Col.TIER] = Tier.TIER_3
 
     fill_na_tier(mut, amp, fus)
     
@@ -263,7 +267,7 @@ class IntermediateReportTests(unittest.TestCase):
         # dest = Path('test/M23-test.xlsx')
         df = parse_oncomine_file(source)
         assign_default_tier(df)
-        reports = generate_intermediate_report(df)
+        reports = generate_intermediate_tables(df)
         self.assertIsNotNone(reports)
         # write_dataframe_as_sheet(dest, **reports)
         generate_printable_gene_info(reports['SNV'], reports['CNV'], reports['FUSION'])

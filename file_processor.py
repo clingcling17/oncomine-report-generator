@@ -2,26 +2,21 @@ import sys
 from zipfile import ZipFile
 from pathlib import Path
 
-def get_case_name(file: Path):
-    return file.stem.split('_')[0]
-
 
 # 윈도우에서 인식하지 못하는 파일명 내 : 문자를 -로 변경
-def unzip_to_destination_and_normalize(file: Path, dest_dir: Path):
+def unzip_to_destination_and_normalize(source_file: Path, dest_dir: Path):
     if dest_dir.exists():
         sys.exit(f'The specified directory {dest_dir} already exists.')
 
     dest_dir.mkdir(parents=True, exist_ok=True)
 
-    with ZipFile(file, 'r') as zipdata:
+    with ZipFile(source_file, 'r') as zipdata:
         zipinfos = zipdata.infolist()
         for zipinfo in zipinfos:
             zipinfo.filename = zipinfo.filename.replace(':', '-')
             zipdata.extract(zipinfo, dest_dir)
     
-    print(f'Unzipped the file {file} to directory {dest_dir}')
-
-    return dest_dir
+    print(f'Unzipped the file [{source_file}] to directory [{dest_dir}].')
 
 
 def find_target_files(root: Path):
@@ -38,7 +33,7 @@ def find_target_files(root: Path):
                    if x.suffix == ('.pdf') and x.name.startswith(case_name))
     
     return {
-        'oncomine_file': oncomine_file,
-        'vcf_file': vcf_file,
-        'qc_file': qc_file
+        'ONCOMINE_FILE': oncomine_file,
+        'VCF_FILE': vcf_file,
+        'QC_FILE': qc_file
     }

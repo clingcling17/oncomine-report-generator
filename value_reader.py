@@ -25,7 +25,13 @@ def parse_coverage_metrics(text: str):
                         r'(\d+)\s+'\
                         r'(\d+.\d+%)\s+')
     match = pattern.search(text)
-    return match.groups()
+    matched = match.groups()
+    return {
+        Metrics.MAPPED_READS: matched[0],
+        Metrics.ON_TARGET: matched[1],
+        Metrics.MEAN_DEPTH: matched[2],
+        Metrics.UNIFORMITY: matched[3]
+    }
 
 
 def parse_headers(file: Path):

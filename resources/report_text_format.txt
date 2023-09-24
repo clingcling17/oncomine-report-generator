@@ -1,0 +1,141 @@
+I. 검체정보
+DNA and RNA extraction: FFPE tissue
+관련병리번호: ????????????
+Key block: ????????????
+Tumor cell percentage: {0}
+Organ: ???????? (??????????????)
+Tumor type: ???????????????????
+Pathologic diagnosis: ????????????????????
+
+
+II. 검사결과
+1. Clinically significant biomarkers(Tier I, II)
+
+(1)Mutation
+========================================================================================
+{1}
+========================================================================================
+
+(2)Amplification
+*Deletion의 경우 이미지 보고서를 참고해 주시기 바랍니다.
+========================================================================================
+{2}
+========================================================================================
+
+(3)Fusion
+========================================================================================
+{3}
+========================================================================================
+
+2. Prevalent cancer biomarkers of unknown significance(Tier III)
+(1)Mutation
+========================================================================================
+{4}
+========================================================================================
+
+(2)Amplification
+*Deletion의 경우 이미지 보고서를 참고해 주시기 바랍니다.
+========================================================================================
+{5}
+========================================================================================
+
+(3)Fusion
+========================================================================================
+{6}
+========================================================================================
+
+3. Tumor mutational burden(Mut/Mb): {7}
+4. Microsatellite instability score: {8} ({9})
+5. Loss of heterozygosity(LOH) percentage: {10}
+5. Essential genomic alterations involving following genes were not found.
+???????????????????????????????????????????????????????????
+
+{11}
+
+
+III. 해석적 보고
+
+본 검사에서 발견된 유전자 변이 중에서 현재까지 약제선택 또는 임상시험에 대한 정보가 있는 유전자는 {12} 입니다. CNV alteration 중 Deletion과 LOH는 이미지 보고서를 참고해 주시기 바랍니다.
+
+1)
+
+
+IV. 검사정보
+
+1. Quality control
+========================================================================================
+DNA QC: Pass
+RNA QC: Pass
+Mean coverage of depth (fold): {13}
+Coverage within target region: {14}
+Total quality score: {15}
+Overall QC test result: {16}
+========================================================================================
+{17}
+
+2. 검사시약
+ - Oncomine Comprehensive Assay plus(Thermofisher scientific)
+
+3. 검사기기
+ - Ion S5 XL sequencer(Thermofisher scientific)
+ - Ion CHEF(Thermofisher scientific)
+
+4. Reference genome: hg19
+
+5. 분석 소프트웨어
+ - Torrent suite v5.16.1
+ - Ion Reporter v5.18
+ - Oncomine knowledgebase reporter v5.4
+
+6. 돌연변이 검출 기준치
+ - Minimum allele frequency of hotspot variant: ≥ 5%
+ - Minimum allele frequency of indel: ≥ 5%
+ - Minimum allele frequency of SNP variant: ≥ 5%
+ - Minimun read counts for fusions: ≥40
+ - CNV gain threshold: 4
+ - Gain confidence level: 0.05
+ - Max fold difference for loss: 0.85
+
+▣ Tier system (J Mol Diagn 2017, 19: 4-23)
+<Tier I>
+- 임상적 의의가 강한 변이 (Strong clinical significance)
+- Level A 또는 Level B에 해당하는 근거를 가지는 변이
+<Tier II>
+- 임상적 의의가 있을 수 있는 변이 (Potential clinical significance)
+- Level C 또는 Level D에 해당하는 근거를 가지는 변이
+<Tier III>
+- 임상적 의의가 불분명한 변이 (Unknown clinical significance)
+- 일반 인구 집단 데이터베이스 혹은 암 관련 데이터베이스에서 유의한 빈도로 관찰되지 않는 경우 혹은 암과의 연관성에 대해 신뢰할 만한 문헌이 없는 경우
+<Tier IV>
+- 양성 혹은 양성일 가능성이 높은 변이 (Benign or likely benign)
+- 일반 인구 집단 데이터베이스에서 유의한 빈도로 관찰되거나, 암과의 관련성에 대한 문헌이 존재하지 않는 경우
+
+▣ Evidence level
+<Level A>
+특정 암종에서 FDA 승인된 약제에 대한 치료 반응 혹은 내성 예측과 관련된 바이오마커 혹은 전문적 가이드라인에 약제에 대한 치료 반응 혹은 내성, 암의 진단 혹은 예후와 관련된 것으로 포함된 바이오마커
+<Level B>
+잘 고안된 연구에 의해 특정 암종에서 약제에 대한 치료 반응 혹은 내성, 암의 진단 혹은 예후와 관련된 것으로 전문가 집단의 합의가 있는 바이오마커
+<Level C>
+다른 암종에서 FDA 승인된 약제에 대한 치료 반응 혹은 내성을 예측하는 바이오마커 혹은 임상시험 참여가 가능한 바이오마커, 여러 개의 소규모 연구에서 암의 진단 혹은 예후와 관련된 것으로 보고된 바이오마커
+<Level D>
+전임상 시험 혹은 소규모 연구 혹은 몇 개의 사례 보고가 있는 바이오마커
+
+Tested by: 이혜린
+Signed by: 이유진/유창영
+
+검사기관: 성빈센트병원 병리과 분자병리 검사실         
+
+[Comment]
+
+*본 검사는 Oncomine Comprehensive Assay (ThermoFisher Scientific)의 548개 유전자에 대한 검출 알고리즘을 사용하며, 포함되지 않은 유전자에 대해서는 별도의 추가 검사가 필요할 수 있습니다. 
+
+* 본 검사는 종양조직에서만 분석되었기 때문에 도출된 염기서열 변이가 생식세포 변이인지 체세포 변이인지 구분이 어렵습니다. VAF가 40-60% 또는 90-100%인 경우 생식세포 변이의 가능성이 있으므로 해석에 주의가 필요합니다.
+
+* 암 패널의 경우 검사 목적과 상관없이 우연히 발견된 검사 결과(Incidental finding)에 대해서는 보고하지 않습니다. 다만 담당의가 해당 질환이 의심된다고 판단하거나 진료를 위하여 필요하다고 요청하는 경우 예외가 될 수 있습니다.
+
+* 상기 검사는 검사방법, 시약의 정도 관리 및 검사 결과가 병리과 전문의에 의해 확인되었습니다.
+
+* 보고서에 포함되어 있는 Microsatellite instability(MSI)와 tumor mutational burden(TMB), LOH 결과는 Ion Reporter 자체 알고리즘으로 계산된 결과이며 실제 결과와 상관관계에 대한 추가적인 유효성 검증이 필요한 상태로, 향후 식약처의 허가 전까지 환자의 치료에 적용해서는 안 되며 실험용도로 참고를 권합니다.
+
+▣ Tested gene lists (Oncomine Comprensive Assay CANCER PANEL)
+(첨부 이미지 참고)
