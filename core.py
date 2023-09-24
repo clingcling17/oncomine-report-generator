@@ -2,14 +2,14 @@ import os
 import sys
 from pathlib import Path
 import pprint
-import pandas as pd
+from pandas import DataFrame
 from tabulate import tabulate
-import numpy as np
+from numpy import nan
 
 import file_processor
 import value_reader
 import table_processor
-from constants import Metrics
+from constants import Metrics, Tier, Col
 
 
 MAPD_POOR_NOTE = 'Note) Sample의 질이 좋지 않아 (MAPD > 0.5) LOH score를 계산할'\
@@ -36,15 +36,12 @@ def run(source_file, dest_dir, case_name):
     headers = value_reader.parse_headers(vcf_file)
 
     oncomine_df = table_processor.parse_oncomine_file(oncomine_file)
-    intermediate_tables = table_processor.generate_intermediate_tables(oncomine_df)
+    snv, cnv, fusion = table_processor.generate_variants(oncomine_df)
     worksheet = dest_dir / (case_name + '.xlsx')
-    table_processor.write_dataframe_as_sheet(worksheet, **intermediate_tables)
+    table_processor.write_dataframe_as_sheet(worksheet, snv, cnv, fusion)
     print(f'Printed intermediate table to worksheet: {worksheet}')
     
-    snv = intermediate_tables['SNV']
-    cnv = intermediate_tables['CNV']
-    fusion = intermediate_tables['FUSION']
-    gene_infos = table_processor.generate_printable_gene_info(snv, cnv, fusion)
+    mut_info, amp_info, fus_info, sig_genes = table_processor.generate_printable_gene_info(snv, cnv, fusion)
 
     # 검사결과
     cellularity = headers[Metrics.CELLULARITY] + '%'
@@ -88,19 +85,18 @@ def run(source_file, dest_dir, case_name):
     
     on_target = str(on_target) + '%'
     
-
-    mut = gene_infos['Mutation']
-    amp = gene_infos['Amplification']
-    fus = gene_infos['Fusion']
-    sig_genes = ', '.join(gene_infos['sig_genes'])
+    sig_genes = ', '.join(sig_genes)
     # mut_sig, amp_sig, fus_sig, mut_unk, amp_unk, fus_unk
 
-    mut_sig = table_processor.filter_significant_tier(mut)
-    amp_sig = table_processor.filter_significant_tier(amp)
-    fus_sig = table_processor.filter_significant_tier(fus)
-    mut_unk = _diff_table(mut, mut_sig)
-    amp_unk = _diff_table(amp, amp_sig)
-    fus_unk = _diff_table(fus, fus_sig)
+    def _filter_significant_tier(df: DataFrame):
+        return df.loc[df[Col.TIER] == Tier.TIER_1_2]
+
+    mut_sig = _filter_significant_tier(mut_info)
+    amp_sig = _filter_significant_tier(amp_info)
+    fus_sig = _filter_significant_tier(fus_info)
+    mut_unk = _diff_table(mut_info, mut_sig)
+    amp_unk = _diff_table(amp_info, amp_sig)
+    fus_unk = _diff_table(fus_info, fus_sig)
 
     mut_sig = _print_table(mut_sig)
     amp_sig = _print_table(amp_sig)
@@ -135,13 +131,13 @@ def run(source_file, dest_dir, case_name):
     print(f'Generated report text file: {report_file}')
 
 
-def _diff_table(op1: pd.DataFrame, op2: pd.DataFrame):
+def _diff_table(op1: DataFrame, op2: DataFrame):
     index = op1.index.name
     return op1[~op1.index.isin(op2.index)]
 
 
-def _print_table(df: pd.DataFrame):
-    return tabulate(df.replace(np.nan, None), headers=df.columns.tolist(),
+def _print_table(df: DataFrame):
+    return tabulate(df.replace(nan, None), headers=df.columns.tolist(),
                     showindex=False) + ('\nNot Found' if df.empty else '')
 
 
