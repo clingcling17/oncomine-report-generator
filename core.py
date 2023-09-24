@@ -121,7 +121,7 @@ def run(source_file, dest_dir, case_name):
         tumor_mutational_burden, msi_score, msi_status, loh, sig_note,
         sig_genes, mean_depth, on_target, total_quality_score,
         overall_qc_test_result, qc_note)
-    # wrapped_text = textwrap.fill(full_text, width=80, expand_tabs=False, 
+    # wrapped_text = textwrap.fill(full_text, width=80, expand_tabs=False,
     #                              replace_whitespace=False, drop_whitespace=False)
 
     report_file = dest_dir / f'{case_name}_report.txt'
@@ -147,11 +147,12 @@ def main():
     if len(sys.argv) != 2:
         sys.exit('Please check arguments number.\n'\
                  + 'Usage: run.exe Mxx-xxxx.zip')
-    source_file = Path(sys.argv[1])
+    source_file = Path(sys.argv[1]).absolute()
     # dest_path = sys.argv[2]
     print(f'File path: {source_file}')
     case_name = source_file.stem.split('_')[0]
-    dest_dir = Path(os.getcwd(), case_name)
+    dest_dir = Path(os.getcwd(), case_name).absolute()
+    os.chdir(getattr(sys, '_MEIPASS')) # pyinstaller temporary dir
     print(f'Destination path: {dest_dir}')
     print(f'Case name: {case_name}')
     run(source_file, dest_dir, case_name)
