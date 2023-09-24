@@ -120,10 +120,10 @@ Overall QC test result: {16}
 <Level D>
 전임상 시험 혹은 소규모 연구 혹은 몇 개의 사례 보고가 있는 바이오마커
 
-Tested by: 이혜린
-Signed by: 이유진/유창영
+Tested by: 
+Signed by: 
 
-검사기관: 성빈센트병원 병리과 분자병리 검사실         
+검사기관: 
 
 [Comment]
 
