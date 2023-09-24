@@ -66,12 +66,7 @@ class Variant(ABC):
     def generate_report_info(self):
         pass
 
-
-    @staticmethod
-    def filter_significant_tier(df: pd.DataFrame):
-        return df.loc[df[Col.TIER] == Tier.TIER_1_2]
     
-
     @staticmethod
     def sort_by_tier_column(df: pd.DataFrame):
         df[Col.TIER] = pd.Categorical(df[Col.TIER], list(Tier), ordered=True)
@@ -79,7 +74,7 @@ class Variant(ABC):
     
 
     @staticmethod
-    def fill_na_tier(*dfs):
+    def _fill_na_tier(*dfs):
         for df in dfs:
             df.loc[df[Col.TIER] == Tier.TIER_NA, Col.TIER] = Tier.TIER_3
     
@@ -129,12 +124,11 @@ class SNV(Variant):
     def generate_report_info(self):
         mut = self.call[[Col.GENE_NAME, Col.AA_CHANGE, Col.NUCLEOTIDE_CHANGE,
                           Col.VAF, Col.TIER]]
-        mut_sig_genes = Variant.filter_significant_tier(mut)[Col.GENE_NAME].tolist()
         mut.loc[:, Col.VAF] = mut[Col.VAF].map('{:.1%}'.format) # pylint: disable=consider-using-f-string
         mut.columns = ['Gene', 'Amino acid change', 'Nucleotide change',
                     'Variant allele frequency(%)', 'Tier']
-        Variant.fill_na_tier(mut)
-        return mut, mut_sig_genes
+        Variant._fill_na_tier(mut)
+        return mut
  
 
 
@@ -189,10 +183,9 @@ class CNV(Variant):
 
     def generate_report_info(self):
         amp = self.call[[Col.GENE_NAME, Col.COPY_NUMBER, Col.TIER]]
-        amp_sig_genes = Variant.filter_significant_tier(amp)[Col.GENE_NAME].tolist()
         amp.columns = ['Gene', 'Estimated copy number', 'Tier']
-        Variant.fill_na_tier(amp)
-        return amp, amp_sig_genes
+        Variant._fill_na_tier(amp)
+        return amp
     
 
 
@@ -248,10 +241,8 @@ class Fusion(Variant):
         fus.rename(lambda x: x.replace('ChBr', 'Chromosome:Breakpoint'),
                 axis='columns', inplace=True)
         
-        fus_sig_genes = Variant.filter_significant_tier(fus).apply(
-            lambda x: x['GeneA'] + '-' + x['GeneB'] + ' fusion', axis=1).tolist()
-        
         Variant.sort_by_tier_column(fus)
-        Variant.fill_na_tier(fus)
-        return fus, fus_sig_genes
+        Variant._fill_na_tier(fus)
+        
+        return fus
     

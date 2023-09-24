@@ -46,11 +46,21 @@ def write_dataframe_as_sheet(file, snv: Variant, cnv: Variant, fusion: Variant):
         fusion.print_worksheet(writer)
 
 
+def filter_significant_tier(df: pd.DataFrame):
+    return df.loc[df[Col.TIER] == constants.Tier.TIER_1_2]
+  
+
 def generate_printable_gene_info(snv: Variant, cnv: Variant, fusion: Variant):
-    mut_info, mut_sig_genes = snv.generate_report_info()
-    amp_info, amp_sig_genes = cnv.generate_report_info()
-    fus_info, fus_sig_genes = fusion.generate_report_info()
+    mut_info = snv.generate_report_info()
+    amp_info = cnv.generate_report_info()
+    fus_info = fusion.generate_report_info()
+
+    mut_sig_genes = filter_significant_tier(mut_info)['Gene'].tolist()
+    amp_sig_genes = filter_significant_tier(amp_info)['Gene'].tolist()
+    fus_sig_genes = filter_significant_tier(fus_info).apply(
+            lambda x: x['GeneA'] + '-' + x['GeneB'] + ' fusion', axis=1).tolist()
     sig_genes = list(set().union(mut_sig_genes, amp_sig_genes)) + fus_sig_genes
+
     return mut_info, amp_info, fus_info, sig_genes
 
 # class ReadTests(unittest.TestCase):
