@@ -54,7 +54,7 @@ class Variant(ABC):
 
     
     def _sort(self):
-        Variant.sort_by_tier_column(self.call)
+        Variant.sort_by_tier(self.call)
         
 
     def print_worksheet(self, writer: pd.ExcelWriter):
@@ -68,7 +68,7 @@ class Variant(ABC):
 
     
     @staticmethod
-    def sort_by_tier_column(df: pd.DataFrame):
+    def sort_by_tier(df: pd.DataFrame):
         df[Col.TIER] = pd.Categorical(df[Col.TIER], list(Tier), ordered=True)
         df.sort_values(by=Col.TIER, inplace=True)
     
@@ -227,7 +227,7 @@ class Fusion(Variant):
     def generate_report_info(self):
         fus = self.call.assign(ChBr = lambda x:
                         (x[Col.CHROMOSOME] + ':' + x[Col.POSITION].astype(str)))
-        fus = fus[[Col.TOTAL_READ, Col.GENE, 'ChBr', Col.TIER]]
+        fus = fus[[Col.GENE, 'ChBr', Col.TOTAL_READ, Col.TIER]]
 
         fus = fus.groupby(Col.TOTAL_READ).agg({
             Col.GENE: list, 'ChBr': list, Col.TIER: 'min'})
@@ -241,8 +241,8 @@ class Fusion(Variant):
         fus.rename(lambda x: x.replace('ChBr', 'Chromosome:Breakpoint'),
                 axis='columns', inplace=True)
         
-        Variant.sort_by_tier_column(fus)
+        Variant.sort_by_tier(fus)
         Variant._fill_na_tier(fus)
-        
+
         return fus
     
