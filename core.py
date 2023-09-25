@@ -55,15 +55,15 @@ def run(source_file, dest_dir, case_name):
     sig_note = MAPD_POOR_NOTE if loh_unavailable and mapd > 0.5 else ''
 
     # 검사정보
-    mean_depth = int(coverage_metrics[Metrics.MEAN_DEPTH])
-    on_target = float(coverage_metrics[Metrics.ON_TARGET].strip('%'))
-    mapped_reads = int(coverage_metrics[Metrics.MAPPED_READS])
-    uniformity = float(coverage_metrics[Metrics.UNIFORMITY].strip('%'))
+    mean_depth = coverage_metrics[Metrics.MEAN_DEPTH]
+    on_target = coverage_metrics[Metrics.ON_TARGET]
+    mapped_reads = coverage_metrics[Metrics.MAPPED_READS]
+    uniformity = coverage_metrics[Metrics.UNIFORMITY]
 
     score_factors = [
         mapped_reads >= 5000000,
         on_target >= 90,
-        mean_depth <= 1200,
+        mean_depth >= 1200,
         uniformity >= 90
         ]
     score_no = sum(score_factors)
