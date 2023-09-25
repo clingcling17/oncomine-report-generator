@@ -207,6 +207,8 @@ class Fusion(Variant):
 
 
     def _assign_tier(self):
+        if self.call.empty:
+            return #빈 테이블일 때 .str 처리 에러
         tier_1_2_gene_names = (
             'ALK', 'BRAF', 'MET', 'ESR1', 'EGFR', 'ETV6', 'NTRK3', 'FLI1',
             'FGFR', 'FGFR3', 'NTRK2', 'NRG1', 'NTRK3', 'PAX8', 'RAF1', 'RELA',
@@ -223,6 +225,10 @@ class Fusion(Variant):
     
 
     def generate_report_info(self):
+        if self.call.empty:
+            return pd.DataFrame(columns=['GeneA', 'Chromosome:BreakpointA',
+                                         'GeneB', 'Chromosome:BreakpointB',
+                                         'Total Read', 'Tier'])
         fus = self.call.assign(ChBr = lambda x:
                         (x[Col.CHROMOSOME] + ':' + x[Col.POSITION].astype(str)))
         fus = fus[[Col.GENE, 'ChBr', Col.TOTAL_READ, Col.TIER]]
