@@ -238,12 +238,12 @@ class Fusion(Variant):
         fus.sort_values(by=Col.TOTAL_READ, ascending=False, inplace=True)
         fus = fus.apply(pd.Series.explode, axis=1)
         fus.reset_index(inplace=True)
-        assert len(fus.columns) == 6
+        assert len(fus.columns) == 6, f'column number is not 6, {len(fus.columns)}.'
 
         fus.columns = ['Total Read', 'GeneA', 'GeneB', 'ChBrA', 'ChBrB', 'Tier']
         fus = fus[['GeneA', 'ChBrA', 'GeneB', 'ChBrB', 'Total Read', 'Tier']]
         fus.rename(lambda x: x.replace('ChBr', 'Chromosome:Breakpoint'),
-                axis='columns', inplace=True) 
+                axis='columns', inplace=True)
         Variant.sort_by_tier(fus)
         return fus
     
