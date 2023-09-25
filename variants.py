@@ -100,6 +100,12 @@ class SNV(Variant):
 
     def __init__(self, df: pd.DataFrame):
         super().__init__(df)
+
+    
+    def _generate_data(self, df):
+        super()._generate_data(df)
+        self.call.loc[self.call[Col.AA_CHANGE].notna(),
+                      Col.AA_CHANGE] = self.call[Col.AA_CHANGE].str.replace('Ter', '*')
     
 
     def _assign_tier(self):
