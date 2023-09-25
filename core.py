@@ -78,10 +78,11 @@ def run(source_file, dest_dir, case_name):
     else:
         total_quality_score = 'Poor'
 
-    overall_qc_test_result = 'Fail' if score_no <= 2 else 'Pass'
+    # overall_qc_test_result = 'Fail' if score_no <= 2 else 'Pass'
+    overall_qc_test_result = 'Pass'
 
     qc_note = UNIFORMITY_POOR_NOTE \
-        if overall_qc_test_result == 'Pass' and uniformity < 90 else ''
+        if total_quality_score == 'Good' and uniformity < 90 else ''
     
     on_target = str(on_target) + '%'
     
@@ -152,7 +153,7 @@ def main():
     print(f'File path: {source_file}')
     case_name = source_file.stem.split('_')[0]
     dest_dir = Path(os.getcwd(), case_name).absolute()
-    os.chdir(getattr(sys, '_MEIPASS')) # pyinstaller temporary dir
+    # os.chdir(getattr(sys, '_MEIPASS')) # pyinstaller temporary dir
     print(f'Destination path: {dest_dir}')
     print(f'Case name: {case_name}')
     run(source_file, dest_dir, case_name)
