@@ -180,7 +180,8 @@ class CNV(Variant):
     
 
     def generate_report_info(self):
-        amp = self.call[[Col.GENE_NAME, Col.COPY_NUMBER, Col.TIER]]
+        amp = self.call.loc[self.call[Col.CALL] == 'AMP']
+        amp = amp[[Col.GENE_NAME, Col.COPY_NUMBER, Col.TIER]]
         amp.columns = ['Gene', 'Estimated copy number', 'Tier']
         return amp
     
