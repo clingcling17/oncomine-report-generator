@@ -155,6 +155,13 @@ class CNV(Variant):
     def __init__(self, df: pd.DataFrame):
         super().__init__(df)
 
+    
+    def _generate_data(self, df):
+        super()._generate_data(df)
+        df = self.call
+        df.drop(df[(df[Col.CALL] == 'AMP') & (df[Col.COPY_NUMBER] < 4)].index,
+                inplace=True)
+
 
     def _assign_tier(self):
         tier_1_2_gene_names = [
