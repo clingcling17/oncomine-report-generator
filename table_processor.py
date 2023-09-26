@@ -26,7 +26,7 @@ def parse_oncomine_file(file: Path):
                        na_values=['.'], low_memory=False)
     not_exist_columns = [x for x in column_orig_names if x not in df.columns.tolist()]
     not_exist_columns.remove('Tier')
-    print(f'Columns not in current tsv file: {not_exist_columns}')
+    # print(f'Columns not in current tsv file: {not_exist_columns}')
     df = df.reindex(columns=column_orig_names) #tsv 파일에 존재하지 않는 칼럼이 있을 경우 추가
     df = df[[c for c in column_orig_names]]
     df.columns = constants.columns
