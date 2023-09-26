@@ -49,10 +49,16 @@ def run(source_file, dest_dir, case_name):
     msi_score = '{:.2f}'.format(float(headers[Metrics.MSI_SCORE]))
     msi_status = headers[Metrics.MSI_STATUS]
     loh = headers[Metrics.PERCENT_LOH]
-    loh_unavailable = loh is None
-    loh = 'not available' if loh_unavailable else loh + '%'
-    mapd = float(headers[Metrics.MAPD])
-    sig_note = MAPD_POOR_NOTE if loh_unavailable and mapd > 0.5 else ''
+    sig_note = ''
+    if loh is None:
+        loh = 'not available'
+        mapd = float(headers[Metrics.MAPD])
+        if mapd > 0.5:
+            sig_note = MAPD_POOR_NOTE
+        else:
+            loh = f'{loh} (MAPD={mapd})'
+    else:
+        loh = loh + '%'
 
     # 검사정보
     mean_depth = coverage_metrics[Metrics.MEAN_DEPTH]
@@ -153,7 +159,7 @@ def main():
     print(f'File path: {source_file}')
     case_name = source_file.stem.split('_')[0]
     dest_dir = Path(os.getcwd(), case_name).absolute()
-    # os.chdir(getattr(sys, '_MEIPASS')) # pyinstaller temporary dir
+    os.chdir(getattr(sys, '_MEIPASS')) # pyinstaller temporary dir
     print(f'Destination path: {dest_dir}')
     print(f'Case name: {case_name}')
     run(source_file, dest_dir, case_name)
