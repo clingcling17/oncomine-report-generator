@@ -2,6 +2,7 @@ import re
 import unittest
 from pathlib import Path
 import pprint
+from ast import literal_eval
 import fitz
 from constants import Metrics
 
@@ -23,13 +24,13 @@ def parse_coverage_metrics(text: str):
                         r'\S+\s+'\
                         r'(\d+)\s+'
                         r'(\d+.\d+%)\s+'\
-                        r'(\d+)\s+'\
+                        r'([0-9]+(?:\.[0-9]+)?)\s+'\
                         r'(\d+.\d+%)\s+')
     match = pattern.search(text)
     matched = match.groups()
     mapped_reads = int(matched[0].replace(",", ""))
     on_target = float(matched[1].strip("%"))
-    mean_depth = int(matched[2].replace(",", ""))
+    mean_depth = literal_eval(matched[2].replace(",", ""))
     uniformity = float(matched[3].strip("%"))
 
     coverage_metrics = {
