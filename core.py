@@ -14,6 +14,8 @@ from constants import Metrics, Tier, Col
 
 MAPD_POOR_NOTE = 'Note) Sample의 질이 좋지 않아 (MAPD > 0.5) LOH score를 계산할'\
     ' 수 없습니다.'
+MAPD_FAIR_NOTE = 'Note) Sample의 질이 좋지 않아 (MAPD ≒ 0.5) LOH score를 계산할'\
+    ' 수 없습니다.'
 UNIFORMITY_POOR_NOTE = 'Note) Sequencing의 질이 좋지 않아 신뢰도가 낮으므로'\
     ' (uniformity < 90%) 임상 적용시 주의가 필요합니다.'
 
@@ -50,13 +52,14 @@ def run(source_file, dest_dir, case_name):
     msi_status = headers[Metrics.MSI_STATUS]
     loh = headers[Metrics.PERCENT_LOH]
     sig_note = ''
-    if loh is None:
-        loh = 'not available'
+    if loh is None or loh == 'NA':
+        loh = 'not available (see note)'
         mapd = float(headers[Metrics.MAPD])
         if mapd > 0.5:
             sig_note = MAPD_POOR_NOTE
         else:
-            loh = f'{loh} (MAPD={mapd})'
+            # loh = f'{loh} (MAPD={mapd})'
+            sig_note = MAPD_FAIR_NOTE
     else:
         loh = loh + '%'
 
