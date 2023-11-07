@@ -63,11 +63,12 @@ def generate_printable_gene_info(snv: Variant, cnv: Variant, fusion: Variant):
 
     mut_sig_genes = filter_significant_tier(mut)['Gene'].tolist()
     amp_sig_genes = filter_significant_tier(amp)['Gene'].tolist()
-    if fus.empty:
-        fus_sig_genes = []
-    else:
-        fus_sig_genes = filter_significant_tier(fus).apply(
-                lambda x: x['GeneA'] + '-' + x['GeneB'] + ' fusion', axis=1).tolist()
+    fus_sig_genes = []
+    if not fus.empty:
+        fus_sig_genes_column = filter_significant_tier(fus).apply(
+                lambda x: x['GeneA'] + '-' + x['GeneB'] + ' fusion', axis=1)
+        if not fus_sig_genes_column.empty:
+            fus_sig_genes = fus_sig_genes_column.tolist()
     sig_genes = list(set().union(mut_sig_genes, amp_sig_genes)) + list(set(fus_sig_genes)) #중복 제거
 
     return mut, amp, fus, sig_genes
