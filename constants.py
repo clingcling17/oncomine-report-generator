@@ -52,7 +52,6 @@ class Metrics:
     MSI_STATUS='MSIStatus'
     PERCENT_LOH = 'percentLOH'
     TMB_MUTATIONS_PER_MB='TMBMutationsPerMb'
-    TOTAL_MAPPED_FUSION_PANEL_READS = 'TotalMappedFusionPanelReads'
     CELLULARITY = 'manually_input_percent_tumor_cellularity'
     MAPD = 'mapd'
     
