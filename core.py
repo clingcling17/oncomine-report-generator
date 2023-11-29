@@ -2,6 +2,7 @@ import os
 import sys
 from pathlib import Path
 import pprint
+import re
 from pandas import DataFrame
 from tabulate import tabulate
 from numpy import nan
@@ -150,6 +151,12 @@ def _print_table(df: DataFrame):
     return tabulate(df.replace(nan, None), headers=df.columns.tolist(),
                     showindex=False) + ('\nNot Found' if df.empty else '')
 
+def _parse_case_name(file_name: str):
+    case_name = file_name.split('_')[0]
+    pattern = re.compile(r'M[\d-]+')
+    match = pattern.search(case_name)
+    return match.group()
+
 
 def main():
     print("Starting oncomine report generator.")
@@ -160,9 +167,10 @@ def main():
     source_file = Path(sys.argv[1]).absolute()
     # dest_path = sys.argv[2]
     print(f'File path: {source_file}')
-    case_name = source_file.stem.split('_')[0]
+    case_name = _parse_case_name(source_file.stem)
+
     dest_dir = Path(os.getcwd(), case_name).absolute()
-    os.chdir(getattr(sys, '_MEIPASS')) # pyinstaller temporary dir
+    # os.chdir(getattr(sys, '_MEIPASS')) # pyinstaller temporary dir
     print(f'Destination path: {dest_dir}')
     print(f'Case name: {case_name}')
     run(source_file, dest_dir, case_name)
