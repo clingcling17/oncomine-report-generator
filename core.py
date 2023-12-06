@@ -43,7 +43,7 @@ def run(source_file, dest_dir, case_name):
 
     oncomine_df = table_processor.parse_oncomine_file(oncomine_file)
     snv, cnv, fusion = table_processor.generate_variants(oncomine_df)
-    worksheet = dest_dir / (case_name + '.xlsx')
+    worksheet = dest_dir / (case_name + '_filtered_data.xlsx')
     table_processor.write_dataframe_as_sheet(worksheet, snv, cnv, fusion)
     print(f'Printed intermediate table to worksheet: {worksheet}')
     
