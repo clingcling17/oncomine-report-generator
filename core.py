@@ -65,7 +65,10 @@ def run(source_file, dest_dir, case_name):
             # loh = f'{loh} (MAPD={mapd})'
             sig_note = MAPD_FAIR_NOTE
     else:
-        loh = loh + '%'
+        if float(loh) == 0.0:
+            loh = '0%'
+        else:
+            loh = loh + '%'
 
     # 검사정보
     mean_depth = coverage_metrics[Metrics.MEAN_DEPTH]
@@ -175,7 +178,7 @@ def main():
     case_name = _parse_case_name(source_file.stem)
 
     dest_dir = Path(os.getcwd(), case_name).absolute()
-    # os.chdir(getattr(sys, '_MEIPASS')) # pyinstaller temporary dir
+    os.chdir(getattr(sys, '_MEIPASS')) # pyinstaller temporary dir
     print(f'Destination path: {dest_dir}')
     print(f'Case name: {case_name}')
     run(source_file, dest_dir, case_name)
