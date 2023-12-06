@@ -32,8 +32,11 @@ def find_target_files(root: Path):
     qc_file = next(x for x in qc_dir.iterdir()
                    if x.suffix == ('.pdf') and x.name.startswith(case_name))
     
+    tumor_fraction_file = root / 'CnvActor' / 'TumorFraction' / 'tumor_fraction.json'
+
     return {
         'ONCOMINE_FILE': oncomine_file,
         'VCF_FILE': vcf_file,
-        'QC_FILE': qc_file
+        'QC_FILE': qc_file,
+        'TUMOR_FRACTION_FILE': tumor_fraction_file
     }

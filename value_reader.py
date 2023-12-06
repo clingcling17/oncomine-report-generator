@@ -4,6 +4,7 @@ from pathlib import Path
 import pprint
 from ast import literal_eval
 import fitz
+import json
 from constants import Metrics
 
 def read_pdf_as_text(file: Path):
@@ -72,6 +73,19 @@ def parse_headers(file: Path):
         'Could not parse header.'
 
     return result
+
+
+def parse_tumor_fraction(file: Path):
+    with open(file) as json_file:
+        json_data = json.load(json_file)
+
+    metric = json_data['genomic_instability_metric']
+    status = json_data['genomic_instability_status']
+    
+    assert metric is not None and status is not None
+
+    return metric, status
+
 
     
 class ReadTests(unittest.TestCase):

@@ -30,13 +30,16 @@ def run(source_file, dest_dir, case_name):
     oncomine_file = files_to_read['ONCOMINE_FILE']
     vcf_file = files_to_read['VCF_FILE']
     qc_file = files_to_read['QC_FILE']
-    assert oncomine_file is not None and vcf_file is not None and qc_file is not None
+    tumor_fraction_file = files_to_read['TUMOR_FRACTION_FILE']
+    assert oncomine_file is not None and vcf_file is not None and qc_file is not None and tumor_fraction_file is not None
 
     qc_pdf_text = value_reader.read_pdf_as_text(qc_file)
     coverage_metrics = value_reader.parse_coverage_metrics(qc_pdf_text)
     assert coverage_metrics is not None
 
     headers = value_reader.parse_headers(vcf_file)
+
+    genomic_instability_metric, genomic_instability_status = value_reader.parse_tumor_fraction(tumor_fraction_file)
 
     oncomine_df = table_processor.parse_oncomine_file(oncomine_file)
     snv, cnv, fusion = table_processor.generate_variants(oncomine_df)
@@ -118,18 +121,20 @@ def run(source_file, dest_dir, case_name):
 
     print_params = [
         cellularity, mut_sig, amp_sig, fus_sig, mut_unk, amp_unk, fus_unk,
-        tumor_mutational_burden, msi_score, msi_status, loh, sig_note,
+        tumor_mutational_burden, msi_score, msi_status, loh,
+        genomic_instability_metric, genomic_instability_status, sig_note,
         sig_genes, mean_depth, on_target, total_quality_score,
         overall_qc_test_result, qc_note
     ]
-    assert len(print_params) == 18
+    assert len(print_params) == 20
 
     format_file = Path('resources/report_text_format.txt')
     with open(format_file, 'rt', encoding='utf-8') as f:
         text_form = f.read()
     
     full_text = text_form.format(cellularity, mut_sig, amp_sig, fus_sig, mut_unk, amp_unk, fus_unk,
-        tumor_mutational_burden, msi_score, msi_status, loh, sig_note,
+        tumor_mutational_burden, msi_score, msi_status, loh,
+        genomic_instability_metric, genomic_instability_status, sig_note,
         sig_genes, mean_depth, on_target, total_quality_score,
         overall_qc_test_result, qc_note)
     # wrapped_text = textwrap.fill(full_text, width=80, expand_tabs=False,

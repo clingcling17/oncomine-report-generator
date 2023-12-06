@@ -47,15 +47,17 @@ II. 검사결과
 3. Tumor mutational burden(Mut/Mb): {7}
 4. Microsatellite instability score: {8} ({9})
 5. Loss of heterozygosity(LOH) percentage: {10}
-5. Essential genomic alterations involving following genes were not found.
+6. Genomic Instability Metric: {11}
+7. Genomic Instability Status: {12}
+8. Essential genomic alterations involving following genes were not found.
 ???????????????????????????????????????????????????????????
 
-{11}
+{13}
 
 
 III. 해석적 보고
 
-본 검사에서 발견된 유전자 변이 중에서 임상적 의미가 중요한 유전자는 {12} 입니다. CNV alteration 중 Deletion과 LOH는 이미지 보고서를 참고해 주시기 바랍니다.
+본 검사에서 발견된 유전자 변이 중에서 임상적 의미가 중요한 유전자는 {14} 입니다. CNV alteration 중 Deletion과 LOH는 이미지 보고서를 참고해 주시기 바랍니다.
 
 1)
 
@@ -66,12 +68,12 @@ IV. 검사정보
 ========================================================================================
 DNA QC: Pass
 RNA QC: Pass
-Mean coverage of depth (fold): {13}
-Coverage within target region: {14}
-Total quality score: {15}
-Overall QC test result: {16}
+Mean coverage of depth (fold): {15}
+Coverage within target region: {16}
+Total quality score: {17}
+Overall QC test result: {18}
 ========================================================================================
-{17}
+{19}
 
 2. 검사시약
  - Oncomine Comprehensive Assay plus(Thermofisher scientific)
@@ -83,9 +85,9 @@ Overall QC test result: {16}
 4. Reference genome: hg19
 
 5. 분석 소프트웨어
- - Torrent suite v5.16.1
- - Ion Reporter v5.18
- - Oncomine knowledgebase reporter v5.4
+ - Torrent suite v5.20
+ - Oncomine comprehensive plus annotations v1.3 r.0
+ - Oncomine knowledgebase reporter v5.8.2
 
 6. 돌연변이 검출 기준치
  - Minimum allele frequency of hotspot variant: ≥ 5%
