@@ -26,38 +26,40 @@ II. 검사결과
 ========================================================================================
 {3}
 ========================================================================================
+{4}
 
 2. Prevalent cancer biomarkers of unknown significance(Tier III)
 (1)Mutation
 ========================================================================================
-{4}
+{5}
 ========================================================================================
 
 (2)Amplification
 *Deletion의 경우 이미지 보고서를 참고해 주시기 바랍니다.
 ========================================================================================
-{5}
+{6}
 ========================================================================================
 
 (3)Fusion
 ========================================================================================
-{6}
+{7}
 ========================================================================================
+{8}
 
-3. Tumor mutational burden(Mut/Mb): {7}
-4. Microsatellite instability score: {8} ({9})
-5. Loss of heterozygosity(LOH) percentage: {10}
-6. Genomic Instability Metric: {11}
-7. Genomic Instability Status: {12}
+3. Tumor mutational burden(Mut/Mb): {9}
+4. Microsatellite instability score: {10} ({11})
+5. Loss of heterozygosity(LOH) percentage: {12}
+6. Genomic Instability Metric: {13}
+7. Genomic Instability Status: {14}
 8. Essential genomic alterations involving following genes were not found.
 ???????????????????????????????????????????????????????????
 
-{13}
+{15}
 
 
 III. 해석적 보고
 
-본 검사에서 발견된 유전자 변이 중에서 임상적 의미가 중요한 유전자는 {14} 입니다. CNV alteration 중 Deletion과 LOH는 이미지 보고서를 참고해 주시기 바랍니다.
+본 검사에서 발견된 유전자 변이 중에서 임상적 의미가 중요한 유전자는 {16} 입니다. CNV alteration 중 Deletion과 LOH는 이미지 보고서를 참고해 주시기 바랍니다.
 
 1)
 
@@ -68,12 +70,12 @@ IV. 검사정보
 ========================================================================================
 DNA QC: Pass
 RNA QC: Pass
-Mean coverage of depth (fold): {15}
-Coverage within target region: {16}
-Total quality score: {17}
-Overall QC test result: {18}
+Mean coverage of depth (fold): {17}
+Coverage within target region: {18}
+Total quality score: {19}
+Overall QC test result: {20}
 ========================================================================================
-{19}
+{21}
 
 2. 검사시약
  - Oncomine Comprehensive Assay plus(Thermofisher scientific)
@@ -125,7 +127,7 @@ Overall QC test result: {18}
 Tested by: 
 Signed by: 
 
-검사기관: 
+검사기관: 성빈센트병원 병리과 분자병리 검사실
 
 [Comment]
 

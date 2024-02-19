@@ -115,13 +115,20 @@ def run(source_file: Path, dest_dir, case_name):
 
     def _filter_significant_tier(df: DataFrame):
         return df.loc[df[Col.TIER] == Tier.TIER_1_2]
+    
+    def _has_low_read(df: DataFrame):
+        return not df.query("`Total Read` < 500").empty
+    
+    fus_low_read_note = 'Note) fusion read 수가 낮아 위양성의 가능성이 있으므로 해석과 임상 적용에 주의가 필요합니다.'
 
     mut_sig = _filter_significant_tier(mut_info)
     amp_sig = _filter_significant_tier(amp_info)
     fus_sig = _filter_significant_tier(fus_info)
+    fus_sig_note = fus_low_read_note if _has_low_read(fus_sig) else ''
     mut_unk = _diff_table(mut_info, mut_sig)
     amp_unk = _diff_table(amp_info, amp_sig)
     fus_unk = _diff_table(fus_info, fus_sig)
+    fus_unk_note = fus_low_read_note if _has_low_read(fus_unk) else ''
 
     mut_sig = _print_table(mut_sig)
     amp_sig = _print_table(amp_sig)
@@ -131,19 +138,21 @@ def run(source_file: Path, dest_dir, case_name):
     fus_unk = _print_table(fus_unk)
 
     print_params = [
-        cellularity, mut_sig, amp_sig, fus_sig, mut_unk, amp_unk, fus_unk,
+        cellularity, mut_sig, amp_sig, fus_sig, fus_sig_note, 
+        mut_unk, amp_unk, fus_unk, fus_unk_note,
         tumor_mutational_burden, msi_score, msi_status, loh,
         genomic_instability_metric, genomic_instability_status, sig_note,
         sig_genes, mean_depth, on_target, total_quality_score,
         overall_qc_test_result, qc_note
     ]
-    assert len(print_params) == 20
+    assert len(print_params) == 22
 
     format_file = Path('resources/report_text_format.txt')
     with open(format_file, 'rt', encoding='utf-8') as f:
         text_form = f.read()
     
-    full_text = text_form.format(cellularity, mut_sig, amp_sig, fus_sig, mut_unk, amp_unk, fus_unk,
+    full_text = text_form.format(cellularity, mut_sig, amp_sig, fus_sig, fus_sig_note,
+        mut_unk, amp_unk, fus_unk, fus_unk_note,
         tumor_mutational_burden, msi_score, msi_status, loh,
         genomic_instability_metric, genomic_instability_status, sig_note,
         sig_genes, mean_depth, on_target, total_quality_score,
