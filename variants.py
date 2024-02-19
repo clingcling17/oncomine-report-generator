@@ -112,7 +112,7 @@ class SNV(Variant):
         super()._assign_tier()
         self.call.loc[(self.call[Col.GENE_NAME] == 'UGT1A1')
             & (self.call[Col.AA_CHANGE] == 'p.Gly71Arg'), Col.TIER] = Tier.TIER_3
-        self.call.loc[self.call[Col.TOTAL_DEPTH] < 100, Col.TIER] = Tier.TIER_4
+        self.call.loc[self.call[Col.TOTAL_DEPTH] < 500, Col.TIER] = Tier.TIER_4
     
 
     def print_worksheet(self, writer: pd.ExcelWriter):
