@@ -21,17 +21,21 @@ UNIFORMITY_POOR_NOTE = 'Note) Sequencing의 질이 좋지 않아 신뢰도가 �
     ' (uniformity < 90%) 임상 적용시 주의가 필요합니다.'
 
 
-def run(source_file, dest_dir, case_name):
+def run(source_file: Path, dest_dir, case_name):
     file_processor.unzip_to_destination_and_normalize(source_file, dest_dir)
+    fusion_file = file_processor.find_fusion_file(source_file.parent, case_name)
+    if fusion_file is not None:
+        file_processor.unzip_to_destination_and_normalize(fusion_file, dest_dir)
     files_to_read = file_processor.find_target_files(dest_dir)
     files_to_read_paths = {k: str(v) for k, v in files_to_read.items()}
     print(f'files to read: \n{pprint.pformat(files_to_read_paths)}')
 
-    oncomine_file = files_to_read['ONCOMINE_FILE']
+    oncomine_D_file = files_to_read['ONCOMINE_D_FILE']
+    oncomine_R_file = files_to_read['ONCOMINE_R_FILE']
     vcf_file = files_to_read['VCF_FILE']
     qc_file = files_to_read['QC_FILE']
     tumor_fraction_file = files_to_read['TUMOR_FRACTION_FILE']
-    assert oncomine_file is not None and vcf_file is not None and qc_file is not None and tumor_fraction_file is not None
+    assert oncomine_D_file is not None and vcf_file is not None and qc_file is not None and tumor_fraction_file is not None
 
     qc_pdf_text = value_reader.read_pdf_as_text(qc_file)
     coverage_metrics = value_reader.parse_coverage_metrics(qc_pdf_text)
@@ -41,8 +45,12 @@ def run(source_file, dest_dir, case_name):
 
     genomic_instability_metric, genomic_instability_status = value_reader.parse_tumor_fraction(tumor_fraction_file)
 
-    oncomine_df = table_processor.parse_oncomine_file(oncomine_file)
-    snv, cnv, fusion = table_processor.generate_variants(oncomine_df)
+    D_oncomine_df = table_processor.parse_oncomine_file(oncomine_D_file)
+    if oncomine_R_file is not None:
+        R_oncomine_df = table_processor.parse_oncomine_file(oncomine_R_file)
+    else:
+        R_oncomine_df = None
+    snv, cnv, fusion = table_processor.generate_variants(D_oncomine_df, R_oncomine_df)
     worksheet = dest_dir / (case_name + '_filtered_data.xlsx')
     table_processor.write_dataframe_as_sheet(worksheet, snv, cnv, fusion)
     print(f'Printed intermediate table to worksheet: {worksheet}')
@@ -161,9 +169,13 @@ def _print_table(df: DataFrame):
 
 def _parse_case_name(file_name: str):
     case_name = file_name.split('_')[0]
-    pattern = re.compile(r'M[\d-]+')
-    match = pattern.search(case_name)
-    return match.group()
+    case_name = case_name[:-1]
+    if case_name.endswith('-'):
+        case_name = case_name[:-1]
+    return case_name
+    # pattern = re.compile(r'M[\d-]+')
+    # match = pattern.search(case_name)
+    # return match.group()
 
 
 def main():

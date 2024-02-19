@@ -34,10 +34,13 @@ def parse_oncomine_file(file: Path):
     return df
 
 
-def generate_variants(df: pd.DataFrame):
-    snv = variants.SNV(df)
-    cnv = variants.CNV(df)
-    fusion = variants.Fusion(df)
+def generate_variants(D_df: pd.DataFrame, R_df: pd.DataFrame):
+    snv = variants.SNV(D_df)
+    cnv = variants.CNV(D_df)
+    if R_df is None:
+        fusion = variants.Fusion(D_df)
+    else:
+        fusion = variants.Fusion(R_df)
 
     return snv, cnv, fusion
 
