@@ -3,7 +3,13 @@ import pandas as pd
 from constants import Col, Tier
 
 
+def initialize_variant_blacklist(df: pd.DataFrame):
+    Variant.blacklist = df
+
+
 class Variant(ABC):
+    blacklist = None
+
     def __init__(self, df: pd.DataFrame):
         self._generate_data(df)
         self._assign_tier()
@@ -52,6 +58,7 @@ class Variant(ABC):
         
         self.call[Col.TIER] = self.call.apply(populate_tier_default, axis=1)
 
+
     
     def _sort(self):
         Variant.sort_by_tier(self.call)
@@ -76,6 +83,11 @@ class Variant(ABC):
     @staticmethod
     def fill_na_tier(df, tier):
         df.loc[df[Col.TIER] == Tier.TIER_NA, Col.TIER] = tier
+
+
+    @staticmethod
+    def filter_out_blacklist(df):
+        return df.drop(df[df[Col.TIER] == Tier.TIER_BLACKLIST].index)
     
 
 
@@ -113,6 +125,13 @@ class SNV(Variant):
         self.call.loc[(self.call[Col.GENE_NAME] == 'UGT1A1')
             & (self.call[Col.AA_CHANGE] == 'p.Gly71Arg'), Col.TIER] = Tier.TIER_3
         self.call.loc[self.call[Col.TOTAL_DEPTH] < 500, Col.TIER] = Tier.TIER_4
+        if Variant.blacklist is not None:
+            blacklist = Variant.blacklist
+            joined_df = self.call.merge(blacklist, how='left',
+                                        indicator='indicator_info')
+            joined_df.loc[joined_df['indicator_info'] == 'both', Col.TIER] = Tier.TIER_BLACKLIST
+            joined_df.drop(columns='indicator_info', inplace=True)
+            self.call = joined_df
     
 
     def print_worksheet(self, writer: pd.ExcelWriter):
@@ -132,7 +151,7 @@ class SNV(Variant):
         mut.loc[:, Col.VAF] = mut[Col.VAF].map('{:.1%}'.format) # pylint: disable=consider-using-f-string
         mut.columns = ['Gene', 'Amino acid change', 'Nucleotide change',
                     'Variant allele frequency(%)', 'Tier']
-        return mut
+        return Variant.filter_out_blacklist(mut)
  
 
 

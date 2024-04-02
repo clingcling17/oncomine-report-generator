@@ -8,6 +8,13 @@ from variants import Variant
 Col = constants.Col
 
 
+def read_blacklist(file: Path):
+    df = pd.read_excel(file, header=None)
+    df.columns = [Col.GENE_NAME, Col.AA_CHANGE, Col.NUCLEOTIDE_CHANGE]
+    # df.loc[len(df)] = ['MAMLD1', 'p.Ala565Ser', 'c.1693G>T'] 
+    return df
+
+
 def parse_oncomine_file(file: Path):
     column_orig_names = [
         'FUNC1.gene', 'INFO.1.GENE_NAME', 'FUNC1.protein', 'FUNC1.coding', 
@@ -29,8 +36,8 @@ def parse_oncomine_file(file: Path):
         not_exist_columns.remove('Tier')
         # print(f'Columns not in current tsv file: {not_exist_columns}')
         df = df.reindex(columns=column_orig_names) #tsv 파일에 존재하지 않는 칼럼이 있을 경우 추가
-        df = pd.DataFrame(columns = column_orig_names)
     except pd.errors.EmptyDataError:
+        print('Data does not exist in current file: ' + str(file))
         df = pd.DataFrame(columns = column_orig_names)
     df = df[[c for c in column_orig_names]]
     df.columns = constants.columns
@@ -38,7 +45,8 @@ def parse_oncomine_file(file: Path):
     return df
 
 
-def generate_variants(D_df: pd.DataFrame, R_df: pd.DataFrame):
+def generate_variants(D_df: pd.DataFrame, R_df: pd.DataFrame, blacklist: pd.DataFrame):
+    variants.initialize_variant_blacklist(blacklist)
     snv = variants.SNV(D_df)
     cnv = variants.CNV(D_df)
     if R_df is None:

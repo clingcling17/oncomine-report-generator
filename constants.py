@@ -62,6 +62,7 @@ class Tier(Enum):
     TIER_3 = 'III'
     TIER_3_4 = 'III/IV'
     TIER_4 = 'IV'
+    TIER_BLACKLIST = 'blacklist'
 
     @property
     def index(self):

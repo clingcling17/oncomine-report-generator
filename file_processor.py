@@ -26,6 +26,9 @@ def unzip_to_destination_and_normalize(source_file: Path, dest_dir: Path):
 
 
 def find_target_files(root: Path):
+    blacklist_file = root.parent / "blacklist.xlsx"
+    if not blacklist_file.exists():
+        blacklist_file = None
     case_name = root.name
     variants_dir = root / 'Variants'
     D_variants_case_dir = next(x for x in variants_dir.iterdir()
@@ -57,5 +60,6 @@ def find_target_files(root: Path):
         'ONCOMINE_R_FILE': R_oncomine_file,
         'VCF_FILE': vcf_file,
         'QC_FILE': qc_file,
-        'TUMOR_FRACTION_FILE': tumor_fraction_file
+        'TUMOR_FRACTION_FILE': tumor_fraction_file,
+        'BLACKLIST_FILE': blacklist_file
     }

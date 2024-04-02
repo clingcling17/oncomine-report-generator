@@ -2,7 +2,6 @@ import os
 import sys
 from pathlib import Path
 import pprint
-import re
 from pandas import DataFrame
 from tabulate import tabulate
 from numpy import nan
@@ -35,6 +34,7 @@ def run(source_file: Path, dest_dir, case_name):
     vcf_file = files_to_read['VCF_FILE']
     qc_file = files_to_read['QC_FILE']
     tumor_fraction_file = files_to_read['TUMOR_FRACTION_FILE']
+    blacklist_file = files_to_read['BLACKLIST_FILE']
     assert oncomine_D_file is not None and vcf_file is not None and qc_file is not None and tumor_fraction_file is not None
 
     qc_pdf_text = value_reader.read_pdf_as_text(qc_file)
@@ -50,7 +50,8 @@ def run(source_file: Path, dest_dir, case_name):
         R_oncomine_df = table_processor.parse_oncomine_file(oncomine_R_file)
     else:
         R_oncomine_df = None
-    snv, cnv, fusion = table_processor.generate_variants(D_oncomine_df, R_oncomine_df)
+    blacklist = None if blacklist_file is None else table_processor.read_blacklist(blacklist_file)
+    snv, cnv, fusion = table_processor.generate_variants(D_oncomine_df, R_oncomine_df, blacklist)
     worksheet = dest_dir / (case_name + '_filtered_data.xlsx')
     table_processor.write_dataframe_as_sheet(worksheet, snv, cnv, fusion)
     print(f'Printed intermediate table to worksheet: {worksheet}')
