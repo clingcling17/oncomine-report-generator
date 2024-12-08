@@ -65,8 +65,8 @@ def write_dataframe_as_sheet(file, snv: Variant, cnv: Variant, fusion: Variant):
 
 
 def filter_significant_tier(df: pd.DataFrame):
-    return df.loc[df[Col.TIER] == constants.Tier.TIER_1_2]
-  
+    return df.loc[df[Col.TIER] <= constants.Tier.TIER_1_2]
+
 
 def generate_printable_gene_info(snv: Variant, cnv: Variant, fusion: Variant):
     mut = snv.generate_report_info()

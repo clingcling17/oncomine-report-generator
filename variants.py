@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import pandas as pd
 from constants import Col, Tier
+import re
 
 
 def initialize_variant_blacklist(df: pd.DataFrame):
@@ -124,7 +125,19 @@ class SNV(Variant):
         super()._assign_tier()
         self.call.loc[(self.call[Col.GENE_NAME] == 'UGT1A1')
             & (self.call[Col.AA_CHANGE] == 'p.Gly71Arg'), Col.TIER] = Tier.TIER_3
+
         self.call.loc[self.call[Col.TOTAL_DEPTH] < 500, Col.TIER] = Tier.TIER_4
+
+        self.call.loc[(self.call[Col.GENE_NAME] == 'EGFR')
+            & ((self.call[Col.AA_CHANGE].str.contains(r'p\.Glu746_.*del.*', regex=True))
+                | (self.call[Col.AA_CHANGE].str.contains(r'p\.Leu747_.*del.*', regex=True))),
+            Col.TIER] = Tier.TIER_1
+
+        self.call.loc[(self.call[Col.GENE_NAME] == 'MAML3')
+            & (self.call[Col.NUCLEOTIDE_CHANGE].str.contains(r'c\.1455_.*del.*', regex=True)
+            & (self.call[Col.NUCLEOTIDE_CHANGE].str.len() >= 16)),
+            Col.TIER] = Tier.TIER_BLACKLIST
+
         if Variant.blacklist is not None:
             blacklist = Variant.blacklist
             joined_df = self.call.merge(blacklist, how='left',

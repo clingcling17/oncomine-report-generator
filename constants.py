@@ -57,6 +57,7 @@ class Metrics:
     
 
 class Tier(Enum):
+    TIER_1 = 'I'
     TIER_1_2 = 'I/II'
     TIER_NA = 'N/A'
     TIER_3 = 'III'

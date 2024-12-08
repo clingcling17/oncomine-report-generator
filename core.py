@@ -115,7 +115,7 @@ def run(source_file: Path, dest_dir, case_name):
     # mut_sig, amp_sig, fus_sig, mut_unk, amp_unk, fus_unk
 
     def _filter_significant_tier(df: DataFrame):
-        return df.loc[df[Col.TIER] == Tier.TIER_1_2]
+        return df.loc[df[Col.TIER] <= Tier.TIER_1_2]
     
     def _has_low_read(df: DataFrame):
         return not df.query("`Total Read` < 500").empty
